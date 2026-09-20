@@ -1,0 +1,6 @@
+{
+  "name": "Civic Intelligence Console",
+  "description": "CivicLens AI — Municipal streetlight and infrastructure complaint portal enhanced with AI duplicate detection and outage clustering.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
