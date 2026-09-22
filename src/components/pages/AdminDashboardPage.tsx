@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Complaint, AIResultType } from '../../types';
 import { 
-  FileText, 
-  CheckCircle2, 
-  Copy, 
-  AlertTriangle, 
   MapPin, 
   Clock, 
-  ArrowRight,
-  ExternalLink,
-  Layers,
-  Sparkles
+  ArrowRight
 } from 'lucide-react';
 
 export const AdminDashboardPage: React.FC = () => {
@@ -201,7 +193,7 @@ export const AdminDashboardPage: React.FC = () => {
               const pinColor = 
                 c.aiResult === 'Possible Wider Outage'
                   ? 'bg-red-600 text-white'
-                  : c.aiResult === 'Likely Duplicate'
+                  ? c.aiResult === 'Likely Duplicate'
                   ? 'bg-amber-500 text-white'
                   : 'bg-blue-600 text-white';
 
