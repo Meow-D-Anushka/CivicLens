@@ -25,7 +25,6 @@ export const ReportIssuePage: React.FC = () => {
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
-        // Fallback to a dark road image if no photo is selected
         photoUrl: photoUrl || 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
         locationName,
         issueType,
@@ -34,11 +33,11 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
-  // Updated sample photos with your provided links
+  // Using the local public folder assets for broken pole and flickering light
   const samplePhotos = [
     { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
-    { label: 'Broken Pole', url: 'https://share.google/WYdGl3e2hpm1KrDbh' },
-    { label: 'Flickering', url: 'https://share.google/lHJ2f1QMhW6EWrtV2' },
+    { label: 'Broken Pole', url: '/broken-pole.jpg' },
+    { label: 'Flickering', url: '/flickering.jpg' },
   ];
 
   return (
