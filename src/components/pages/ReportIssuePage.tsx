@@ -34,11 +34,11 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
-  // Updated sample photos with reliable, relevant imagery
+  // Updated sample photos with your provided links
   const samplePhotos = [
     { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
-    { label: 'Broken Pole', url: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=600' },
-    { label: 'Flickering', url: 'https://images.pexels.com/photos/1234035/pexels-photo-1234035.jpeg?auto=compress&cs=tinysrgb&w=600' },
+    { label: 'Broken Pole', url: 'https://share.google/WYdGl3e2hpm1KrDbh' },
+    { label: 'Flickering', url: 'https://share.google/lHJ2f1QMhW6EWrtV2' },
   ];
 
   return (
