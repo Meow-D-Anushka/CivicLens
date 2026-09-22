@@ -25,7 +25,8 @@ export const ReportIssuePage: React.FC = () => {
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
-        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?auto=format&fit=crop&q=80&w=600',
+        // Fallback to a dark road image if no photo is selected
+        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
         locationName,
         issueType,
         description,
@@ -33,10 +34,11 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
+  // Updated sample photos with reliable, relevant imagery
   const samplePhotos = [
-    { label: 'Outage 1', url: 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?auto=format&fit=crop&q=80&w=600' },
-    { label: 'Outage 2', url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=600' },
-    { label: 'Flicker', url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=600' },
+    { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
+    { label: 'Broken Pole', url: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=600' },
+    { label: 'Flickering', url: 'https://images.pexels.com/photos/1234035/pexels-photo-1234035.jpeg?auto=compress&cs=tinysrgb&w=600' },
   ];
 
   return (
