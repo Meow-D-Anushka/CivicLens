@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   MapPin, 
@@ -8,7 +8,6 @@ import {
 
 export const AdminDashboardPage: React.FC = () => {
   const { complaints, selectedComplaint, selectComplaint, navigateTo } = useApp();
-  const [activeTab, setActiveTab] = useState<'all' | 'duplicates' | 'outages'>('all');
 
   // Stats
   const totalReports = 248;
@@ -190,10 +189,11 @@ export const AdminDashboardPage: React.FC = () => {
               };
               const pos = pinCoords[c.id] || { top: `${25 + index * 15}%`, left: `${30 + index * 12}%` };
 
+              // Fixed syntax error in ternary operator
               const pinColor = 
                 c.aiResult === 'Possible Wider Outage'
                   ? 'bg-red-600 text-white'
-                  ? c.aiResult === 'Likely Duplicate'
+                  : c.aiResult === 'Likely Duplicate'
                   ? 'bg-amber-500 text-white'
                   : 'bg-blue-600 text-white';
 
