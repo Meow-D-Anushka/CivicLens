@@ -3,8 +3,8 @@ import { Complaint } from '../types';
 export const INITIAL_COMPLAINTS: Complaint[] = [
   {
     id: 'CL-1042',
-    // Shattered glass / broken bulb fixture
-    photoUrl: 'https://images.unsplash.com/photo-1563207153-f4047d11f8e1?auto=format&fit=crop&q=80&w=600',
+    // Dark, moody streetlamp
+    photoUrl: 'https://images.pexels.com/photos/800150/pexels-photo-800150.jpeg?auto=compress&cs=tinysrgb&w=600',
     locationName: 'Oak Street & 4th Avenue',
     coords: { lat: 40.7128, lng: -74.0060 },
     timeAgo: '10 min ago',
@@ -22,8 +22,8 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
   },
   {
     id: 'CL-1045',
-    // Dim, flickering street lamp in fog
-    photoUrl: 'https://images.unsplash.com/photo-1508881260849-c18843232bb0?auto=format&fit=crop&q=80&w=600',
+    // Dim, isolated street light at night
+    photoUrl: 'https://images.pexels.com/photos/1234035/pexels-photo-1234035.jpeg?auto=compress&cs=tinysrgb&w=600',
     locationName: 'Pine Road, Near Park',
     coords: { lat: 40.7135, lng: -74.0051 },
     timeAgo: '45 min ago',
@@ -40,8 +40,8 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
   },
   {
     id: 'CL-1048',
-    // Messy, tangled, leaning utility wires and pole
-    photoUrl: 'https://images.unsplash.com/photo-1517409240453-90d2dc6032e8?auto=format&fit=crop&q=80&w=600',
+    // Silhouetted street light pole in the dark
+    photoUrl: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=600',
     locationName: 'Maple Drive, Block A',
     coords: { lat: 40.7112, lng: -74.0080 },
     timeAgo: '2 hours ago',
@@ -58,7 +58,7 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
   },
   {
     id: 'CL-1051',
-    // Pitch black street at night
+    // The working pitch-black street image
     photoUrl: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
     locationName: 'Cedar Boulevard',
     coords: { lat: 40.7150, lng: -74.0030 },
@@ -75,4 +75,4 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
     aiExplanation: 'High volume of outage reports along this grid line suggests a circuit failure.',
     similarComplaintId: 'CL-1050',
   }
-];
+];  
