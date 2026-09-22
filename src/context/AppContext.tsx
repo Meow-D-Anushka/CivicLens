@@ -26,14 +26,26 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// The v5 key acts as a hard reset for anyone visiting the deployed link
+const STORAGE_KEY = 'civic_lens_v5_final';
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<PageView>('home');
   
-  // 1. Initialized with fresh key 'civic_lens_streetlights' to bypass old cached images
+  // 1. Initialized with fresh key 'civic_lens_v5_final' to bypass old cached images
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('civic_lens_streetlights');
-      if (saved) return JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse LocalStorage", e);
+      }
     }
     return INITIAL_COMPLAINTS;
   });
@@ -47,9 +59,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     matchedComplaint: Complaint | null;
   } | null>(null);
 
-  // 2. Auto-save to LocalStorage using the new key
+  // 2. Auto-save to LocalStorage using the v5 key
   useEffect(() => {
-    localStorage.setItem('civic_lens_streetlights', JSON.stringify(complaints));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(complaints));
   }, [complaints]);
 
   // Set initial selected complaint once complaints load
