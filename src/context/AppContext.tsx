@@ -29,10 +29,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<PageView>('home');
   
-  // 1. Initialize from LocalStorage using the new key to force a fresh database
+  // 1. Initialized with fresh key 'civic_lens_streetlights' to bypass old cached images
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('civic_lens_final');
+      const saved = localStorage.getItem('civic_lens_streetlights');
       if (saved) return JSON.parse(saved);
     }
     return INITIAL_COMPLAINTS;
@@ -49,7 +49,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 2. Auto-save to LocalStorage using the new key
   useEffect(() => {
-    localStorage.setItem('civic_lens_final', JSON.stringify(complaints));
+    localStorage.setItem('civic_lens_streetlights', JSON.stringify(complaints));
   }, [complaints]);
 
   // Set initial selected complaint once complaints load
@@ -80,13 +80,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }) => {
     const newId = `CL-${Math.floor(1050 + Math.random() * 900)}`;
     
-    // Pick a random existing complaint to be the "match" so it varies
-    const randomIndex = Math.floor(Math.random() * Math.min(complaints.length, 5));
+    // Pick a random existing complaint to simulate an AI match
+    const randomIndex = Math.floor(Math.random() * Math.min(complaints.length, 4));
     const matched = complaints[randomIndex] || complaints[0];
 
-    // Generate dynamic "AI" numbers so the UI looks like it's doing real processing
-    const simPercent = Math.floor(Math.random() * (98 - 72 + 1)) + 72; // Between 72% and 98%
-    const proxMeters = Math.floor(Math.random() * (45 - 5 + 1)) + 5;   // Between 5m and 45m
+    const simPercent = Math.floor(Math.random() * (98 - 72 + 1)) + 72;
+    const proxMeters = Math.floor(Math.random() * (45 - 5 + 1)) + 5;
     const density = Math.floor(Math.random() * 4) + 1;
 
     const newComplaint: Complaint = {
@@ -111,7 +110,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       similarComplaintId: matched.id,
     };
 
-    // 3. Actually add the new complaint to the feed!
     setComplaints((prev) => [newComplaint, ...prev]);
 
     setSubmissionResult({
