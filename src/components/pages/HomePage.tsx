@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowRight, MapPin, Camera, Sparkles, ShieldCheck } from 'lucide-react';
+import { ArrowRight, MapPin, Sparkles, ShieldCheck } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const { navigateTo } = useApp();
@@ -49,29 +49,38 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Small illustration / map image */}
+        {/* Right: Dynamic Animated Map */}
         <div className="w-full lg:w-[380px] shrink-0">
           <div className="relative rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner overflow-hidden">
             
-            {/* Visual preview card representing streetlight map + AI detection */}
             <div className="relative h-64 w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-              <img
-                src="https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80"
-                alt="Streetlight problem reporting"
-                className="w-full h-full object-cover"
-              />
-              
-              {/* Overlay Map Pin & Radius Graphic */}
-              <div className="absolute inset-0 bg-slate-900/30 flex items-center justify-center">
-                <div className="relative flex items-center justify-center">
-                  <div className="w-24 h-24 rounded-full bg-blue-500/30 border border-blue-400 animate-ping absolute" />
-                  <div className="w-16 h-16 rounded-full bg-blue-600/40 border-2 border-blue-400 flex items-center justify-center backdrop-blur-xs">
-                    <MapPin className="w-7 h-7 text-white fill-white drop-shadow-md" />
-                  </div>
+              {/* Map Canvas */}
+              <svg viewBox="0 0 600 400" className="w-full h-full object-cover">
+                {/* Background Grid */}
+                <rect width="600" height="400" fill="#F8FAFC" />
+                
+                {/* Roads */}
+                <line x1="0" y1="150" x2="600" y2="150" stroke="#E2E8F0" strokeWidth="30" />
+                <line x1="0" y1="280" x2="600" y2="280" stroke="#F1F5F9" strokeWidth="20" />
+                <line x1="200" y1="0" x2="200" y2="400" stroke="#E2E8F0" strokeWidth="30" />
+                <line x1="450" y1="0" x2="450" y2="400" stroke="#F1F5F9" strokeWidth="24" />
+                
+                {/* Radar/Scanning Animation */}
+                <circle cx="300" cy="150" r="80" fill="rgba(59, 130, 246, 0.1)" stroke="#3B82F6" strokeWidth="2" strokeDasharray="6,6">
+                  <animate attributeName="r" values="0;120" dur="3s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="1;0" dur="3s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="300" cy="150" r="40" fill="rgba(59, 130, 246, 0.2)" />
+              </svg>
+
+              {/* Center GPS Pin */}
+              <div className="absolute top-[37.5%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xl border-4 border-white animate-bounce">
+                  <MapPin className="w-5 h-5 fill-white" />
                 </div>
               </div>
-
-              {/* Float badge */}
+              
+              {/* Float badge matching previous design */}
               <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-lg p-2.5 shadow-md border border-slate-200 flex items-center justify-between text-xs">
                 <div>
                   <span className="font-semibold text-slate-800 block">Nearby Check</span>
