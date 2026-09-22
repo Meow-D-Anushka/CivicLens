@@ -3,7 +3,7 @@ import { Complaint } from '../types';
 export const INITIAL_COMPLAINTS: Complaint[] = [
   {
     id: 'CL-1042',
-    photoUrl: 'https://picsum.photos/id/122/600/400',
+    photoUrl: 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?auto=format&fit=crop&q=80&w=600',
     locationName: 'Oak Street & 4th Avenue',
     coords: { lat: 40.7128, lng: -74.0060 },
     timeAgo: '10 min ago',
@@ -21,7 +21,7 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
   },
   {
     id: 'CL-1045',
-    photoUrl: 'https://picsum.photos/id/133/600/400',
+    photoUrl: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=600',
     locationName: 'Pine Road, Near Park',
     coords: { lat: 40.7135, lng: -74.0051 },
     timeAgo: '45 min ago',
@@ -38,7 +38,7 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
   },
   {
     id: 'CL-1048',
-    photoUrl: 'https://picsum.photos/id/144/600/400',
+    photoUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=600',
     locationName: 'Maple Drive, Block A',
     coords: { lat: 40.7112, lng: -74.0080 },
     timeAgo: '2 hours ago',
@@ -55,7 +55,7 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
   },
   {
     id: 'CL-1051',
-    photoUrl: 'https://picsum.photos/id/155/600/400',
+    photoUrl: 'https://images.unsplash.com/photo-1473186578172-c141e6798cf4?auto=format&fit=crop&q=80&w=600',
     locationName: 'Cedar Boulevard',
     coords: { lat: 40.7150, lng: -74.0030 },
     timeAgo: '3 hours ago',
