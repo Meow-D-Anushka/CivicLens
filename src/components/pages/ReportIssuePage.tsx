@@ -18,14 +18,11 @@ import { IssueType } from '../../types';
 export const ReportIssuePage: React.FC = () => {
   const { submitNewReport, submissionResult, navigateTo, clearSubmissionResult } = useApp();
 
-  const [photoUrl, setPhotoUrl] = useState<string>(
-    'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80'
-  );
-  const [locationName, setLocationName] = useState('Oak Street & 4th Avenue');
+  // Start with a blank form for the live demo
+  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [locationName, setLocationName] = useState('');
   const [issueType, setIssueType] = useState<IssueType>('Light Completely Out');
-  const [description, setDescription] = useState(
-    'Luminaire on the corner pole is dark. Crosswalk is unlit.'
-  );
+  const [description, setDescription] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,7 +31,7 @@ export const ReportIssuePage: React.FC = () => {
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
-        photoUrl,
+        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80', // Fallback if they submit without clicking a sample
         locationName,
         issueType,
         description,
@@ -78,7 +75,7 @@ export const ReportIssuePage: React.FC = () => {
                 Possible existing complaint found
               </h2>
               <p className="text-slate-700 text-base font-medium mt-1">
-                “A similar complaint was reported 15 m away.”
+                “A similar complaint was reported {submissionResult.pendingComplaint?.factors?.proximityMeters || 15} m away.”
               </p>
             </div>
           </div>
@@ -106,7 +103,7 @@ export const ReportIssuePage: React.FC = () => {
             <div className="text-right sm:text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
               <span className="text-xs text-slate-500 font-medium">Image similarity:</span>
               <span className="font-heading font-extrabold text-2xl text-amber-700">
-                91%
+                {submissionResult.pendingComplaint?.factors?.imageSimilarityPercent || 91}%
               </span>
             </div>
           </div>
@@ -154,12 +151,16 @@ export const ReportIssuePage: React.FC = () => {
             <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 {/* Photo Preview */}
-                <div className="relative w-28 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-200 shrink-0">
-                  <img
-                    src={photoUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="relative w-28 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-200 flex items-center justify-center shrink-0">
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Camera className="w-8 h-8 text-slate-400" />
+                  )}
                   <div className="absolute top-1 right-1 bg-black/60 rounded px-1 text-[10px] text-white">
                     Preview
                   </div>
