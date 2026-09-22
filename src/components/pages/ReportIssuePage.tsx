@@ -31,8 +31,8 @@ export const ReportIssuePage: React.FC = () => {
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
-        // Updated fallback URL to a dark street image
-        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1617882200843-c0d2836f32e6?w=600&auto=format&fit=crop&q=80', 
+        // Updated fallback URL to a working Picsum image
+        photoUrl: photoUrl || 'https://picsum.photos/id/166/600/400', 
         locationName,
         issueType,
         description,
@@ -40,11 +40,11 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
-  // Updated sample photos to actual streetlights
+  // Updated sample photos to working Picsum images
   const samplePhotos = [
-    { label: 'Outage 1', url: 'https://images.unsplash.com/photo-1617882200843-c0d2836f32e6?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Outage 2', url: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Flicker', url: 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?w=600&auto=format&fit=crop&q=80' },
+    { label: 'Outage 1', url: 'https://picsum.photos/id/177/600/400' },
+    { label: 'Outage 2', url: 'https://picsum.photos/id/188/600/400' },
+    { label: 'Flicker', url: 'https://picsum.photos/id/199/600/400' },
   ];
 
   return (
