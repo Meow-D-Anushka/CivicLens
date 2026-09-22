@@ -31,7 +31,8 @@ export const ReportIssuePage: React.FC = () => {
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
-        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80', // Fallback if they submit without clicking a sample
+        // Updated fallback URL to a dark street image
+        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1617882200843-c0d2836f32e6?w=600&auto=format&fit=crop&q=80', 
         locationName,
         issueType,
         description,
@@ -39,10 +40,11 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
+  // Updated sample photos to actual streetlights
   const samplePhotos = [
-    { label: 'Outage 1', url: 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Outage 2', url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Flicker', url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600&auto=format&fit=crop&q=80' },
+    { label: 'Outage 1', url: 'https://images.unsplash.com/photo-1617882200843-c0d2836f32e6?w=600&auto=format&fit=crop&q=80' },
+    { label: 'Outage 2', url: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=600&auto=format&fit=crop&q=80' },
+    { label: 'Flicker', url: 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?w=600&auto=format&fit=crop&q=80' },
   ];
 
   return (
