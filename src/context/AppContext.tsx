@@ -29,10 +29,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<PageView>('home');
   
-  // 1. Initialize from LocalStorage so data survives page refreshes during your demo
+  // 1. Initialize from LocalStorage using the new key to force a fresh database
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('civic_lens_complaints');
+      const saved = localStorage.getItem('civic_lens_final');
       if (saved) return JSON.parse(saved);
     }
     return INITIAL_COMPLAINTS;
@@ -47,9 +47,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     matchedComplaint: Complaint | null;
   } | null>(null);
 
-  // 2. Auto-save to LocalStorage whenever complaints change
+  // 2. Auto-save to LocalStorage using the new key
   useEffect(() => {
-    localStorage.setItem('civic_lens_complaints', JSON.stringify(complaints));
+    localStorage.setItem('civic_lens_final', JSON.stringify(complaints));
   }, [complaints]);
 
   // Set initial selected complaint once complaints load
@@ -111,7 +111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       similarComplaintId: matched.id,
     };
 
-    // 3. CRITICAL FIX: Actually add the new complaint to the feed!
+    // 3. Actually add the new complaint to the feed!
     setComplaints((prev) => [newComplaint, ...prev]);
 
     setSubmissionResult({
