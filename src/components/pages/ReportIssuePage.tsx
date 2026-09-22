@@ -3,22 +3,16 @@ import { useApp } from '../../context/AppContext';
 import { 
   Camera, 
   MapPin, 
-  CheckCircle2, 
   AlertTriangle, 
-  Upload, 
   ArrowRight, 
-  Sparkles, 
   Eye, 
-  SendHorizontal,
-  RefreshCw,
-  X
+  RefreshCw 
 } from 'lucide-react';
 import { IssueType } from '../../types';
 
 export const ReportIssuePage: React.FC = () => {
   const { submitNewReport, submissionResult, navigateTo, clearSubmissionResult } = useApp();
 
-  // Start with a blank form for the live demo
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [locationName, setLocationName] = useState('');
   const [issueType, setIssueType] = useState<IssueType>('Light Completely Out');
@@ -31,8 +25,7 @@ export const ReportIssuePage: React.FC = () => {
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
-        // Updated fallback URL to a working Picsum image
-        photoUrl: photoUrl || 'https://picsum.photos/id/166/600/400', 
+        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?auto=format&fit=crop&q=80&w=600',
         locationName,
         issueType,
         description,
@@ -40,17 +33,14 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
-  // Updated sample photos to working Picsum images
   const samplePhotos = [
-    { label: 'Outage 1', url: 'https://picsum.photos/id/177/600/400' },
-    { label: 'Outage 2', url: 'https://picsum.photos/id/188/600/400' },
-    { label: 'Flicker', url: 'https://picsum.photos/id/199/600/400' },
+    { label: 'Outage 1', url: 'https://images.unsplash.com/photo-1508246830723-5e838ff244d8?auto=format&fit=crop&q=80&w=600' },
+    { label: 'Outage 2', url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=600' },
+    { label: 'Flicker', url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=600' },
   ];
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      
-      {/* Page Title */}
       <div className="mb-6">
         <h1 className="font-heading font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
           Report a Streetlight Issue
@@ -60,10 +50,8 @@ export const ReportIssuePage: React.FC = () => {
         </p>
       </div>
 
-      {/* Result Card: Shown After Submission */}
       {submissionResult && submissionResult.hasMatch ? (
         <div className="bg-white rounded-2xl border-2 border-amber-400 p-6 sm:p-8 shadow-lg space-y-6 animate-in fade-in duration-200">
-          
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0">
               <AlertTriangle className="w-6 h-6" />
@@ -82,7 +70,6 @@ export const ReportIssuePage: React.FC = () => {
             </div>
           </div>
 
-          {/* AI Match Metrics Card */}
           <div className="bg-amber-50/80 rounded-xl p-4 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 rounded-lg overflow-hidden border border-amber-300 shrink-0">
@@ -110,7 +97,6 @@ export const ReportIssuePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Prompt Buttons: View Existing Complaint & Submit Anyway */}
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
             <button
               type="button"
@@ -136,15 +122,9 @@ export const ReportIssuePage: React.FC = () => {
               Submit Anyway
             </button>
           </div>
-
         </div>
       ) : (
-        /* The Simple Form */
-        <form 
-          onSubmit={handleSubmit}
-          className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6"
-        >
-          {/* 1. Upload Photo */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
               1. Upload Photo
@@ -152,14 +132,9 @@ export const ReportIssuePage: React.FC = () => {
 
             <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                {/* Photo Preview */}
                 <div className="relative w-28 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-200 flex items-center justify-center shrink-0">
                   {photoUrl ? (
-                    <img
-                      src={photoUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={photoUrl} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <Camera className="w-8 h-8 text-slate-400" />
                   )}
@@ -168,13 +143,11 @@ export const ReportIssuePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Upload action or quick selector */}
                 <div className="flex-1 text-center sm:text-left space-y-2">
                   <p className="text-xs text-slate-600">
-                    Snap or upload a photo of the damaged or dark streetlight fixture.
+                    Snap or select a photo of the damaged or dark streetlight fixture.
                   </p>
                   
-                  {/* Preset quick test selector */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[11px] text-slate-400 font-medium">Sample photos:</span>
                     {samplePhotos.map((p, idx) => (
@@ -197,7 +170,6 @@ export const ReportIssuePage: React.FC = () => {
             </div>
           </div>
 
-          {/* 2. Location with small map and GPS pin */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
               2. Location with small map and GPS pin
@@ -216,27 +188,18 @@ export const ReportIssuePage: React.FC = () => {
                 />
               </div>
 
-              {/* Small Map with GPS Pin */}
               <div className="relative h-40 w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
                 <svg viewBox="0 0 600 240" className="w-full h-full object-cover">
-                  {/* Map Grid Roads */}
                   <rect width="600" height="240" fill="#F1F5F9" />
                   <line x1="0" y1="120" x2="600" y2="120" stroke="#CBD5E1" strokeWidth="24" />
                   <line x1="300" y1="0" x2="300" y2="240" stroke="#CBD5E1" strokeWidth="24" />
                   <line x1="140" y1="0" x2="140" y2="240" stroke="#E2E8F0" strokeWidth="12" />
                   <line x1="460" y1="0" x2="460" y2="240" stroke="#E2E8F0" strokeWidth="12" />
-                  <line x1="0" y1="60" x2="600" y2="60" stroke="#E2E8F0" strokeWidth="10" />
-                  <line x1="0" y1="180" x2="600" y2="180" stroke="#E2E8F0" strokeWidth="10" />
-
-                  {/* Proximity scanning radius circle */}
                   <circle cx="300" cy="120" r="45" fill="rgba(59, 130, 246, 0.15)" stroke="#3B82F6" strokeWidth="1.5" strokeDasharray="4,4" />
-                  
-                  {/* Adjacent existing complaints pins */}
                   <circle cx="285" cy="115" r="5" fill="#EF4444" />
                   <circle cx="315" cy="128" r="5" fill="#EF4444" />
                 </svg>
 
-                {/* Primary Animated GPS Pin */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
                   <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white">
                     <MapPin className="w-5 h-5 fill-white" />
@@ -253,7 +216,6 @@ export const ReportIssuePage: React.FC = () => {
             </div>
           </div>
 
-          {/* 3. Issue Type dropdown */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
               3. Issue Type
@@ -270,7 +232,6 @@ export const ReportIssuePage: React.FC = () => {
             </select>
           </div>
 
-          {/* 4. Short Description */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
               4. Short Description
@@ -285,7 +246,6 @@ export const ReportIssuePage: React.FC = () => {
             />
           </div>
 
-          {/* 5. Large “Check & Submit” button */}
           <div className="pt-2">
             <button
               type="submit"
@@ -305,10 +265,8 @@ export const ReportIssuePage: React.FC = () => {
               )}
             </button>
           </div>
-
         </form>
       )}
-
     </div>
   );
 };
