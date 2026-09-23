@@ -9,7 +9,6 @@ import {
   RefreshCw 
 } from 'lucide-react';
 
-// Allow for the new custom string type alongside the predefined ones
 type ExtendedIssueType = 'Light Completely Out' | 'Flickering Continuously' | 'Damaged Pole / Exposed Wiring' | 'Light On During Daytime' | 'Other (specify)';
 
 export const ReportIssuePage: React.FC = () => {
@@ -26,7 +25,6 @@ export const ReportIssuePage: React.FC = () => {
     e.preventDefault();
     setIsAnalyzing(true);
     
-    // Use the custom issue string if "Other" is selected
     const finalIssueType = issueType === 'Other (specify)' && customIssueType.trim() !== '' 
       ? customIssueType 
       : issueType;
@@ -36,7 +34,7 @@ export const ReportIssuePage: React.FC = () => {
       submitNewReport({
         photoUrl: photoUrl || 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
         locationName,
-        issueType: finalIssueType as any, // Cast to any to bypass strict type check on the mock function
+        issueType: finalIssueType as any,
         description,
       });
     }, 700);
@@ -44,9 +42,8 @@ export const ReportIssuePage: React.FC = () => {
 
   const samplePhotos = [
     { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
-    // Changed to relative paths to fix Vite deployment 404s
-    { label: 'Broken Pole', url: './broken-pole.jpg' },
-    { label: 'Flickering', url: './flickering.jpg' },
+    { label: 'Broken Pole', url: '/broken-pole.jpg' },
+    { label: 'Flickering', url: '/flickering.jpg' },
   ];
 
   return (
@@ -87,10 +84,6 @@ export const ReportIssuePage: React.FC = () => {
                   src={submissionResult.matchedComplaint?.photoUrl || photoUrl}
                   alt="Existing complaint"
                   className="w-full h-full object-cover opacity-80"
-                  onError={(e) => {
-                    // Fallback to absolute path if relative fails
-                    (e.target as HTMLImageElement).src = `/${(e.target as HTMLImageElement).src.split('/').pop()}`;
-                  }}
                 />
               </div>
               <div>
@@ -148,18 +141,7 @@ export const ReportIssuePage: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative w-32 h-24 rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center shrink-0">
                   {photoUrl ? (
-                    <img 
-                      src={photoUrl} 
-                      alt="Preview" 
-                      className="w-full h-full object-cover opacity-90" 
-                      onError={(e) => {
-                        // Attempt fallback to absolute path
-                        const img = e.target as HTMLImageElement;
-                        if (img.src.includes('./')) {
-                          img.src = `/${img.src.split('/').pop()}`;
-                        }
-                      }}
-                    />
+                    <img src={photoUrl} alt="Preview" className="w-full h-full object-cover opacity-90" />
                   ) : (
                     <Camera className="w-6 h-6 text-neutral-500" />
                   )}
@@ -211,7 +193,6 @@ export const ReportIssuePage: React.FC = () => {
               </div>
 
               <div className="relative h-32 w-full rounded-xl overflow-hidden border border-white/10 bg-[#050505]">
-                {/* Dark mode abstract map SVG */}
                 <svg viewBox="0 0 600 240" className="w-full h-full object-cover opacity-40">
                   <rect width="600" height="240" fill="#050505" />
                   <line x1="0" y1="120" x2="600" y2="120" stroke="#1f2937" strokeWidth="24" />
@@ -245,7 +226,6 @@ export const ReportIssuePage: React.FC = () => {
                 <option value="Other (specify)">Other (specify)</option>
               </select>
 
-              {/* Conditional Input for 'Other' */}
               {issueType === 'Other (specify)' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                   <input
