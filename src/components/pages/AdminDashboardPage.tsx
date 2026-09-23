@@ -8,14 +8,17 @@ import {
   Filter, 
   Clock, 
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  X
 } from 'lucide-react';
-import { ComplaintStatus } from '../../types';
+import { ComplaintStatus, Complaint } from '../../types';
 
 export const AdminDashboardPage: React.FC = () => {
   const { navigateTo } = useApp();
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list');
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'All'>('All');
+  const [selectedPin, setSelectedPin] = useState<Complaint | null>(mockComplaints[0]);
 
   const total = mockComplaints.length;
   const pending = mockComplaints.filter(c => c.status === 'Pending Review').length;
@@ -25,6 +28,14 @@ export const AdminDashboardPage: React.FC = () => {
   const filteredComplaints = mockComplaints.filter(c => 
     statusFilter === 'All' ? true : c.status === statusFilter
   );
+
+  // Map pin coordinates mapped to our mock complaints
+  const mapPins = [
+    { complaint: mockComplaints[0], top: '35%', left: '25%' }, // CL-1436
+    { complaint: mockComplaints[1], top: '35%', left: '65%' }, // CL-1042
+    { complaint: mockComplaints[2], top: '65%', left: '45%' }, // CL-1045
+    { complaint: mockComplaints[3], top: '85%', left: '65%' }, // CL-1048
+  ];
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-20 relative z-10">
@@ -77,40 +88,108 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Dynamic Tab Content (Feed vs GIS Map) */}
       {activeTab === 'map' ? (
-        <div className="bg-white border border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-2xl font-bold uppercase tracking-tight text-black">City Streetlight Grid Map</h3>
-              <p className="text-xs text-[#525252] font-mono uppercase">Interactive Spatial Telemetry</p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Interactive Map Area */}
+          <div className="lg:col-span-8 bg-white border border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-2xl font-bold uppercase tracking-tight text-black">City Streetlight Grid Map</h3>
+                <p className="text-xs text-[#525252] font-mono uppercase">Click any pin to inspect telemetry</p>
+              </div>
+              <div className="flex items-center gap-4 text-xs font-mono uppercase">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-black rounded-full" /> Active Pin</span>
+              </div>
             </div>
-            <div className="flex items-center gap-4 text-xs font-mono uppercase">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-black rounded-full" /> Unique</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-[#737373] rounded-full" /> Duplicate</span>
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-black border border-black rounded-full" /> Outage</span>
+
+            <div className="relative h-[480px] w-full border border-black bg-white overflow-hidden">
+              <svg viewBox="0 0 600 350" className="w-full h-full absolute inset-0 pointer-events-none">
+                <rect width="600" height="350" fill="#FFFFFF" />
+                <line x1="0" y1="120" x2="600" y2="120" stroke="#E5E5E5" strokeWidth="24" />
+                <line x1="0" y1="240" x2="600" y2="240" stroke="#E5E5E5" strokeWidth="24" />
+                <line x1="180" y1="0" x2="180" y2="350" stroke="#E5E5E5" strokeWidth="24" />
+                <line x1="420" y1="0" x2="420" y2="350" stroke="#E5E5E5" strokeWidth="24" />
+              </svg>
+
+              {/* Clickable HTML Map Pins */}
+              {mapPins.map((pin, idx) => {
+                const isSelected = selectedPin?.id === pin.complaint.id;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedPin(pin.complaint)}
+                    style={{ top: pin.top, left: pin.left }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-transform cursor-none ${
+                      isSelected 
+                        ? 'bg-black text-white ring-4 ring-black/20 scale-125 z-20' 
+                        : 'bg-white text-black border-2 border-black hover:scale-110 z-10'
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4" />
+                  </button>
+                );
+              })}
+
+              <div className="absolute bottom-4 left-4 bg-white border border-black px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider z-20">
+                Interactive Grid • 4 Active Reports Plotted
+              </div>
             </div>
           </div>
 
-          <div className="relative h-[450px] w-full border border-black bg-white overflow-hidden">
-            <svg viewBox="0 0 600 350" className="w-full h-full object-cover">
-              <rect width="600" height="350" fill="#FFFFFF" />
-              <line x1="0" y1="100" x2="600" y2="100" stroke="#E5E5E5" strokeWidth="20" />
-              <line x1="0" y1="220" x2="600" y2="220" stroke="#E5E5E5" strokeWidth="20" />
-              <line x1="150" y1="0" x2="150" y2="350" stroke="#E5E5E5" strokeWidth="20" />
-              <line x1="400" y1="0" x2="400" y2="350" stroke="#E5E5E5" strokeWidth="20" />
-              
-              {/* Interactive Map Pins */}
-              <circle cx="150" cy="100" r="8" fill="#000000" className="cursor-pointer" onClick={() => navigateTo('details', 'CL-1436')} />
-              <circle cx="400" cy="100" r="14" fill="#000000" stroke="#FFFFFF" strokeWidth="2" className="cursor-pointer" onClick={() => navigateTo('details', 'CL-1042')} />
-              <circle cx="400" cy="100" r="28" fill="none" stroke="#000000" strokeWidth="1" strokeDasharray="4,4" />
-              <circle cx="280" cy="220" r="8" fill="#525252" />
-              <circle cx="400" cy="220" r="8" fill="#000000" />
-              <circle cx="400" cy="300" r="10" fill="#000000" />
-            </svg>
+          {/* Selected Pin Inspection Panel */}
+          <div className="lg:col-span-4 bg-white border border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
+            {selectedPin ? (
+              <div>
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-black">
+                  <span className="editorial-meta text-xs">Pin Inspection</span>
+                  <span className="font-mono text-xs font-bold text-black px-2.5 py-1 border border-black bg-[#FAFAFA]">
+                    {selectedPin.id}
+                  </span>
+                </div>
 
-            <div className="absolute bottom-4 left-4 bg-white border border-black px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider">
-              Showing Active Pin Markers • Click a pin to inspect report
-            </div>
+                <div className="w-full h-48 border border-black overflow-hidden mb-6 bg-[#FAFAFA]">
+                  <img 
+                    src={selectedPin.photoUrl} 
+                    alt={selectedPin.id} 
+                    className="editorial-image w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  <div>
+                    <span className="editorial-meta text-[10px] block mb-1">Location</span>
+                    <h4 className="text-lg font-bold text-black">{selectedPin.locationName}</h4>
+                  </div>
+                  <div>
+                    <span className="editorial-meta text-[10px] block mb-1">Classification</span>
+                    <p className="text-sm text-[#525252]">{selectedPin.issueType}</p>
+                  </div>
+                  <div>
+                    <span className="editorial-meta text-[10px] block mb-1">Status</span>
+                    <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider border border-black bg-white text-black">
+                      {selectedPin.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="py-20 text-center flex flex-col items-center justify-center">
+                <MapPin className="w-10 h-10 text-[#737373] mb-4 animate-bounce" />
+                <p className="text-[#525252] font-mono text-xs uppercase">Select a pin on the map to inspect telemetry data.</p>
+              </div>
+            )}
+
+            {selectedPin && (
+              <button
+                onClick={() => navigateTo('details', selectedPin.id)}
+                className="w-full py-4 bg-black hover:bg-[#525252] text-white font-bold text-xs uppercase tracking-[0.1em] transition-colors flex items-center justify-center gap-2 cursor-none"
+              >
+                <span>Full Report Details</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
+
         </div>
       ) : (
         <div className="bg-white border border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
