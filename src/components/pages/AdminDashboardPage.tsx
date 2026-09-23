@@ -6,11 +6,9 @@ import {
   Map as MapIcon, 
   Search, 
   Filter, 
-  Clock, 
   ArrowRight,
   AlertCircle,
-  MapPin,
-  X
+  MapPin
 } from 'lucide-react';
 import { ComplaintStatus, Complaint } from '../../types';
 
@@ -29,12 +27,11 @@ export const AdminDashboardPage: React.FC = () => {
     statusFilter === 'All' ? true : c.status === statusFilter
   );
 
-  // Map pin coordinates mapped to our mock complaints
   const mapPins = [
-    { complaint: mockComplaints[0], top: '35%', left: '25%' }, // CL-1436
-    { complaint: mockComplaints[1], top: '35%', left: '65%' }, // CL-1042
-    { complaint: mockComplaints[2], top: '65%', left: '45%' }, // CL-1045
-    { complaint: mockComplaints[3], top: '85%', left: '65%' }, // CL-1048
+    { complaint: mockComplaints[0], top: '35%', left: '25%' },
+    { complaint: mockComplaints[1], top: '35%', left: '65%' },
+    { complaint: mockComplaints[2], top: '65%', left: '45%' },
+    { complaint: mockComplaints[3], top: '85%', left: '65%' },
   ];
 
   return (
@@ -97,9 +94,6 @@ export const AdminDashboardPage: React.FC = () => {
                 <h3 className="text-2xl font-bold uppercase tracking-tight text-black">City Streetlight Grid Map</h3>
                 <p className="text-xs text-[#525252] font-mono uppercase">Click any pin to inspect telemetry</p>
               </div>
-              <div className="flex items-center gap-4 text-xs font-mono uppercase">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-black rounded-full" /> Active Pin</span>
-              </div>
             </div>
 
             <div className="relative h-[480px] w-full border border-black bg-white overflow-hidden">
@@ -111,7 +105,6 @@ export const AdminDashboardPage: React.FC = () => {
                 <line x1="420" y1="0" x2="420" y2="350" stroke="#E5E5E5" strokeWidth="24" />
               </svg>
 
-              {/* Clickable HTML Map Pins */}
               {mapPins.map((pin, idx) => {
                 const isSelected = selectedPin?.id === pin.complaint.id;
                 return (
@@ -129,10 +122,6 @@ export const AdminDashboardPage: React.FC = () => {
                   </button>
                 );
               })}
-
-              <div className="absolute bottom-4 left-4 bg-white border border-black px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider z-20">
-                Interactive Grid • 4 Active Reports Plotted
-              </div>
             </div>
           </div>
 
@@ -174,7 +163,7 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             ) : (
               <div className="py-20 text-center flex flex-col items-center justify-center">
-                <MapPin className="w-10 h-10 text-[#737373] mb-4 animate-bounce" />
+                <MapPin className="w-10 h-10 text-[#737373] mb-4" />
                 <p className="text-[#525252] font-mono text-xs uppercase">Select a pin on the map to inspect telemetry data.</p>
               </div>
             )}
@@ -222,15 +211,15 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Data Table */}
+          {/* Data Table with Thumbnail Photos */}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#F5F5F5] border-b border-black">
+                  <th className="px-6 py-4 editorial-meta text-xs text-black">Evidence</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Report ID</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Location</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Classification</th>
-                  <th className="px-6 py-4 editorial-meta text-xs text-black">Confidence</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Status</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black text-right">Action</th>
                 </tr>
@@ -242,28 +231,30 @@ export const AdminDashboardPage: React.FC = () => {
                     className="hover:bg-[#FAFAFA] transition-colors group cursor-none"
                     onClick={() => navigateTo('details', complaint.id)}
                   >
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4">
+                      <div className="w-12 h-10 border border-black overflow-hidden bg-[#FAFAFA]">
+                        <img 
+                          src={complaint.photoUrl} 
+                          alt={complaint.id} 
+                          className="editorial-image w-full h-full object-cover"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <span className="font-mono text-xs font-bold text-black">{complaint.id}</span>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4">
                       <span className="text-sm font-bold text-black">{complaint.locationName}</span>
                     </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4">
                       <span className="text-sm text-[#525252]">{complaint.issueType}</span>
                     </td>
-                    <td className="px-6 py-5">
-                      {complaint.aiConfidence ? (
-                        <span className="font-mono text-xs font-bold text-black">{complaint.aiConfidence}%</span>
-                      ) : (
-                        <span className="text-sm text-[#737373]">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4">
                       <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider border border-black bg-white text-black">
                         {complaint.status}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-6 py-4 text-right">
                       <button 
                         className="text-xs font-bold uppercase tracking-wider text-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end w-full gap-1 cursor-none"
                         onClick={(e) => {
