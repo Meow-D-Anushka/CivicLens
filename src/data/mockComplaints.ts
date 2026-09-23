@@ -27,7 +27,7 @@ export const mockComplaints: Complaint[] = [
     issueType: 'Damaged Pole / Exposed Wiring',
     description: 'Pole base cracked with exposed live wiring after recent weather.',
     status: 'Pending Review',
-    photoUrl: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
+    photoUrl: '/broken-lamp.jpg',
     aiConfidence: 88,
     createdAt: new Date(Date.now() - 2700000).toISOString(),
   },
@@ -37,11 +37,10 @@ export const mockComplaints: Complaint[] = [
     issueType: 'Light On During Daytime',
     description: 'Fixture remains illuminated 24/7 wasting grid energy.',
     status: 'Duplicate',
-    photoUrl: 'https://images.unsplash.com/photo-1517409265814-726715694c92?auto=format&fit=crop&q=80&w=600',
+    photoUrl: '/defect-light.jpg',
     aiConfidence: 85,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
   }
 ];
 
-// Export both names to satisfy any file referencing either one
 export const INITIAL_COMPLAINTS = mockComplaints;
