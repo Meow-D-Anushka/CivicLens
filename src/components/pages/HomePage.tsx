@@ -50,15 +50,15 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Infinite Marquee Section (Shortened Font Size) */}
-      <section className="w-full border-b border-black/10 py-6 marquee-container overflow-hidden bg-white relative">
-        <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
+      {/* Infinite Marquee Section (Shortened & Scaled Down Font Size) */}
+      <section className="w-full border-b border-black/10 py-4 marquee-container overflow-hidden bg-white relative">
+        <div className="animate-marquee flex items-center gap-10 whitespace-nowrap">
           {[...Array(8)].map((_, i) => (
             <React.Fragment key={i}>
-              <span className="text-xl md:text-3xl font-bold tracking-tight text-black uppercase">Active AI Radar</span>
-              <span className="text-lg text-[#737373]">///</span>
-              <span className="text-xl md:text-3xl font-bold tracking-tight text-black uppercase">Instant Verification</span>
-              <span className="text-lg text-[#737373]">///</span>
+              <span className="text-sm md:text-base font-mono font-bold tracking-[0.2em] text-black uppercase">Active AI Radar</span>
+              <span className="text-sm text-[#737373]">///</span>
+              <span className="text-sm md:text-base font-mono font-bold tracking-[0.2em] text-black uppercase">Instant Verification</span>
+              <span className="text-sm text-[#737373]">///</span>
             </React.Fragment>
           ))}
         </div>
