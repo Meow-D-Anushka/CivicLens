@@ -1,45 +1,101 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-heading: 'Plus Jakarta Sans', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-
   body {
-    background-color: #F8FAFC;
-    color: #0F172A;
-    font-family: var(--font-sans);
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
-    -webkit-font-smoothing: antialiased;
+    cursor: none; /* Hides default cursor for our custom one */
+  }
+  
+  /* Typography Scale */
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+  }
+  
+  p {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.5;
+    color: #525252;
   }
 }
 
-.font-heading {
-  font-family: var(--font-heading);
+/* Custom Editorial Cursor */
+.editorial-cursor {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #000000;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.font-mono-code {
-  font-family: var(--font-mono);
+.editorial-cursor.hovering {
+  width: 80px;
+  height: 80px;
 }
 
-/* Custom subtle scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
 }
 
-::-webkit-scrollbar-track {
-  background: #F1F5F9;
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 3px;
+.marquee-container:hover .animate-marquee {
+  animation-play-state: paused;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+/* Cubic-Bezier Reveal */
+@keyframes revealUp {
+  from { 
+    transform: translateY(100%); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0%); 
+    opacity: 1; 
+  }
+}
+
+.animate-reveal {
+  animation: revealUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Image Hover Behaviors */
+.editorial-image {
+  filter: grayscale(100%);
+  transition: all 700ms ease;
+}
+
+.editorial-image:hover {
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+/* Utility for mono/metadata text */
+.editorial-meta {
+  font-family: monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #737373;
 }
