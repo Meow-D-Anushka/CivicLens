@@ -26,13 +26,12 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// The v5 key acts as a hard reset for anyone visiting the deployed link
-const STORAGE_KEY = 'civic_lens_v5_final';
+// Updated storage key to force cache reset and load new local images
+const STORAGE_KEY = 'civic_lens_v6_final';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<PageView>('home');
   
-  // 1. Initialized with fresh key 'civic_lens_v5_final' to bypass old cached images
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -59,12 +58,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     matchedComplaint: Complaint | null;
   } | null>(null);
 
-  // 2. Auto-save to LocalStorage using the v5 key
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(complaints));
   }, [complaints]);
 
-  // Set initial selected complaint once complaints load
   useEffect(() => {
     if (complaints.length > 0 && !selectedComplaint) {
       setSelectedComplaint(complaints[0]);
@@ -92,7 +89,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }) => {
     const newId = `CL-${Math.floor(1050 + Math.random() * 900)}`;
     
-    // Pick a random existing complaint to simulate an AI match
     const randomIndex = Math.floor(Math.random() * Math.min(complaints.length, 4));
     const matched = complaints[randomIndex] || complaints[0];
 
