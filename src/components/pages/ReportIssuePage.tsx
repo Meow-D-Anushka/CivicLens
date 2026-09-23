@@ -8,26 +8,35 @@ import {
   Eye, 
   RefreshCw 
 } from 'lucide-react';
-import { IssueType } from '../../types';
+
+// Allow for the new custom string type alongside the predefined ones
+type ExtendedIssueType = 'Light Completely Out' | 'Flickering Continuously' | 'Damaged Pole / Exposed Wiring' | 'Light On During Daytime' | 'Other (specify)';
 
 export const ReportIssuePage: React.FC = () => {
   const { submitNewReport, submissionResult, navigateTo, clearSubmissionResult } = useApp();
 
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [locationName, setLocationName] = useState('');
-  const [issueType, setIssueType] = useState<IssueType>('Light Completely Out');
+  const [issueType, setIssueType] = useState<ExtendedIssueType>('Light Completely Out');
+  const [customIssueType, setCustomIssueType] = useState('');
   const [description, setDescription] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsAnalyzing(true);
+    
+    // Use the custom issue string if "Other" is selected
+    const finalIssueType = issueType === 'Other (specify)' && customIssueType.trim() !== '' 
+      ? customIssueType 
+      : issueType;
+
     setTimeout(() => {
       setIsAnalyzing(false);
       submitNewReport({
         photoUrl: photoUrl || 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
         locationName,
-        issueType,
+        issueType: finalIssueType as any, // Cast to any to bypass strict type check on the mock function
         description,
       });
     }, 700);
@@ -35,8 +44,9 @@ export const ReportIssuePage: React.FC = () => {
 
   const samplePhotos = [
     { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
-    { label: 'Broken Pole', url: '/broken-pole.jpg' },
-    { label: 'Flickering', url: '/flickering.jpg' },
+    // Changed to relative paths to fix Vite deployment 404s
+    { label: 'Broken Pole', url: './broken-pole.jpg' },
+    { label: 'Flickering', url: './flickering.jpg' },
   ];
 
   return (
@@ -77,6 +87,10 @@ export const ReportIssuePage: React.FC = () => {
                   src={submissionResult.matchedComplaint?.photoUrl || photoUrl}
                   alt="Existing complaint"
                   className="w-full h-full object-cover opacity-80"
+                  onError={(e) => {
+                    // Fallback to absolute path if relative fails
+                    (e.target as HTMLImageElement).src = `/${(e.target as HTMLImageElement).src.split('/').pop()}`;
+                  }}
                 />
               </div>
               <div>
@@ -134,7 +148,18 @@ export const ReportIssuePage: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative w-32 h-24 rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center shrink-0">
                   {photoUrl ? (
-                    <img src={photoUrl} alt="Preview" className="w-full h-full object-cover opacity-90" />
+                    <img 
+                      src={photoUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover opacity-90" 
+                      onError={(e) => {
+                        // Attempt fallback to absolute path
+                        const img = e.target as HTMLImageElement;
+                        if (img.src.includes('./')) {
+                          img.src = `/${img.src.split('/').pop()}`;
+                        }
+                      }}
+                    />
                   ) : (
                     <Camera className="w-6 h-6 text-neutral-500" />
                   )}
@@ -207,16 +232,33 @@ export const ReportIssuePage: React.FC = () => {
             <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 mb-3">
               03. Anomaly Classification
             </label>
-            <select
-              value={issueType}
-              onChange={(e) => setIssueType(e.target.value as IssueType)}
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer appearance-none"
-            >
-              <option value="Light Completely Out">Light Completely Out</option>
-              <option value="Flickering Continuously">Flickering Continuously</option>
-              <option value="Damaged Pole / Exposed Wiring">Damaged Pole / Exposed Wiring</option>
-              <option value="Light On During Daytime">Light On During Daytime</option>
-            </select>
+            <div className="space-y-3">
+              <select
+                value={issueType}
+                onChange={(e) => setIssueType(e.target.value as ExtendedIssueType)}
+                className="w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer appearance-none"
+              >
+                <option value="Light Completely Out">Light Completely Out</option>
+                <option value="Flickering Continuously">Flickering Continuously</option>
+                <option value="Damaged Pole / Exposed Wiring">Damaged Pole / Exposed Wiring</option>
+                <option value="Light On During Daytime">Light On During Daytime</option>
+                <option value="Other (specify)">Other (specify)</option>
+              </select>
+
+              {/* Conditional Input for 'Other' */}
+              {issueType === 'Other (specify)' && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <input
+                    type="text"
+                    value={customIssueType}
+                    onChange={(e) => setCustomIssueType(e.target.value)}
+                    placeholder="Please specify the issue..."
+                    required
+                    className="w-full px-4 py-3 bg-white/5 border border-cyan-500/50 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-all"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
