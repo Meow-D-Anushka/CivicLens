@@ -33,7 +33,6 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
-  // Using the local public folder assets for broken pole and flickering light
   const samplePhotos = [
     { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
     { label: 'Broken Pole', url: '/broken-pole.jpg' },
@@ -41,64 +40,64 @@ export const ReportIssuePage: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <div className="mb-6">
-        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
-          Report a Streetlight Issue
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20 relative z-10">
+      <div className="mb-10 text-center sm:text-left">
+        <h1 className="font-heading text-4xl sm:text-5xl text-white tracking-tight mb-3">
+          Report an Issue
         </h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Fill out the details below. Our AI checks for existing nearby complaints automatically.
+        <p className="text-neutral-400 text-sm md:text-base font-light">
+          Submit infrastructure anomalies. AI proximity radar is active.
         </p>
       </div>
 
       {submissionResult && submissionResult.hasMatch ? (
-        <div className="bg-white rounded-2xl border-2 border-amber-400 p-6 sm:p-8 shadow-lg space-y-6 animate-in fade-in duration-200">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 shrink-0">
+        <div className="glass-panel rounded-3xl border border-amber-500/30 p-6 sm:p-8 shadow-[0_0_40px_-10px_rgba(245,158,11,0.15)] animate-in fade-in duration-300">
+          <div className="flex items-start gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div className="flex-1">
-              <div className="inline-block px-2.5 py-0.5 rounded bg-amber-100 text-amber-800 text-xs font-semibold mb-1">
-                AI Proximity Match
+              <div className="inline-block px-2 py-1 rounded bg-amber-500/10 text-amber-400 font-mono text-[10px] uppercase tracking-widest mb-3 border border-amber-500/20">
+                Proximity Match Detected
               </div>
-              <h2 className="font-heading font-bold text-xl sm:text-2xl text-slate-900">
-                Possible existing complaint found
+              <h2 className="font-heading text-2xl sm:text-3xl text-white mb-2">
+                Existing complaint found
               </h2>
-              <p className="text-slate-700 text-base font-medium mt-1">
-                “A similar complaint was reported {submissionResult.pendingComplaint?.factors?.proximityMeters || 15} m away.”
+              <p className="text-neutral-400 text-sm">
+                System radar indicates a highly similar anomaly logged {submissionResult.pendingComplaint?.factors?.proximityMeters || 15}m from your coordinates.
               </p>
             </div>
           </div>
 
-          <div className="bg-amber-50/80 rounded-xl p-4 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-lg overflow-hidden border border-amber-300 shrink-0">
+          <div className="bg-black/40 rounded-2xl p-5 border border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 shrink-0">
                 <img
                   src={submissionResult.matchedComplaint?.photoUrl || photoUrl}
                   alt="Existing complaint"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover opacity-80"
                 />
               </div>
               <div>
-                <span className="text-xs text-slate-500 font-medium block">
-                  Existing Report ID: {submissionResult.matchedComplaint?.id || 'CL-1042'}
+                <span className="font-mono text-[10px] text-neutral-500 tracking-widest block mb-1">
+                  REF: {submissionResult.matchedComplaint?.id || 'CL-1042'}
                 </span>
-                <span className="text-sm font-semibold text-slate-800">
+                <span className="text-sm font-medium text-white block">
                   {submissionResult.matchedComplaint?.locationName || 'Oak Street & 4th Avenue'}
                 </span>
               </div>
             </div>
 
-            <div className="text-right sm:text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end">
-              <span className="text-xs text-slate-500 font-medium">Image similarity:</span>
-              <span className="font-heading font-extrabold text-2xl text-amber-700">
+            <div className="text-center sm:text-right w-full sm:w-auto p-3 bg-white/5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Match Confidence</span>
+              <span className="font-mono text-2xl text-amber-400">
                 {submissionResult.pendingComplaint?.factors?.imageSimilarityPercent || 91}%
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
             <button
               type="button"
               onClick={() => {
@@ -106,10 +105,10 @@ export const ReportIssuePage: React.FC = () => {
                 clearSubmissionResult();
                 navigateTo('details', targetId);
               }}
-              className="w-full sm:flex-1 py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-heading font-semibold text-sm sm:text-base rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:flex-1 py-4 px-6 bg-white hover:bg-neutral-200 text-black font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <Eye className="w-4 h-4" />
-              <span>View Existing Complaint</span>
+              <span>View Existing Report</span>
             </button>
 
             <button
@@ -118,48 +117,45 @@ export const ReportIssuePage: React.FC = () => {
                 clearSubmissionResult();
                 navigateTo('dashboard');
               }}
-              className="w-full sm:w-auto py-3.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-heading font-semibold text-sm sm:text-base rounded-xl transition-colors cursor-pointer border border-slate-300"
+              className="w-full sm:w-auto py-4 px-6 bg-transparent hover:bg-white/5 text-white font-medium text-sm rounded-xl transition-colors cursor-pointer border border-white/10"
             >
-              Submit Anyway
+              Force Submit
             </button>
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-6 sm:p-10 space-y-8">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-              1. Upload Photo
+            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 mb-3">
+              01. Visual Evidence
             </label>
 
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="relative w-28 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-200 flex items-center justify-center shrink-0">
+            <div className="border border-dashed border-white/20 rounded-2xl p-5 bg-white/5 hover:bg-white/10 transition-colors">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="relative w-32 h-24 rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center shrink-0">
                   {photoUrl ? (
-                    <img src={photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={photoUrl} alt="Preview" className="w-full h-full object-cover opacity-90" />
                   ) : (
-                    <Camera className="w-8 h-8 text-slate-400" />
+                    <Camera className="w-6 h-6 text-neutral-500" />
                   )}
-                  <div className="absolute top-1 right-1 bg-black/60 rounded px-1 text-[10px] text-white">
-                    Preview
-                  </div>
                 </div>
 
-                <div className="flex-1 text-center sm:text-left space-y-2">
-                  <p className="text-xs text-slate-600">
-                    Snap or select a photo of the damaged or dark streetlight fixture.
+                <div className="flex-1 text-center sm:text-left">
+                  <p className="text-xs text-neutral-400 mb-4">
+                    Upload a clear image of the infrastructure anomaly.
                   </p>
                   
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] text-slate-400 font-medium">Sample photos:</span>
+                  <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                    <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest mr-2">Test Assets:</span>
                     {samplePhotos.map((p, idx) => (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => setPhotoUrl(p.url)}
-                        className={`text-[11px] px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                        className={`text-[11px] px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
                           photoUrl === p.url
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                            : 'bg-white/5 text-neutral-400 border-white/10 hover:bg-white/10 hover:text-white'
                         }`}
                       >
                         {p.label}
@@ -172,59 +168,49 @@ export const ReportIssuePage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-              2. Location with small map and GPS pin
+            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 mb-3">
+              02. Geolocation coordinates
             </label>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="relative">
-                <MapPin className="w-4 h-4 text-blue-600 absolute left-3.5 top-3.5" />
+                <MapPin className="w-4 h-4 text-neutral-400 absolute left-4 top-3.5" />
                 <input
                   type="text"
                   value={locationName}
                   onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="e.g. Oak Street & 4th Avenue"
+                  placeholder="e.g. Sector 17, Main Boulevard"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                  className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
               </div>
 
-              <div className="relative h-40 w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                <svg viewBox="0 0 600 240" className="w-full h-full object-cover">
-                  <rect width="600" height="240" fill="#F1F5F9" />
-                  <line x1="0" y1="120" x2="600" y2="120" stroke="#CBD5E1" strokeWidth="24" />
-                  <line x1="300" y1="0" x2="300" y2="240" stroke="#CBD5E1" strokeWidth="24" />
-                  <line x1="140" y1="0" x2="140" y2="240" stroke="#E2E8F0" strokeWidth="12" />
-                  <line x1="460" y1="0" x2="460" y2="240" stroke="#E2E8F0" strokeWidth="12" />
-                  <circle cx="300" cy="120" r="45" fill="rgba(59, 130, 246, 0.15)" stroke="#3B82F6" strokeWidth="1.5" strokeDasharray="4,4" />
-                  <circle cx="285" cy="115" r="5" fill="#EF4444" />
-                  <circle cx="315" cy="128" r="5" fill="#EF4444" />
+              <div className="relative h-32 w-full rounded-xl overflow-hidden border border-white/10 bg-[#050505]">
+                {/* Dark mode abstract map SVG */}
+                <svg viewBox="0 0 600 240" className="w-full h-full object-cover opacity-40">
+                  <rect width="600" height="240" fill="#050505" />
+                  <line x1="0" y1="120" x2="600" y2="120" stroke="#1f2937" strokeWidth="24" />
+                  <line x1="300" y1="0" x2="300" y2="240" stroke="#1f2937" strokeWidth="24" />
+                  <circle cx="300" cy="120" r="45" fill="rgba(6,182,212,0.1)" stroke="#06b6d4" strokeWidth="1" strokeDasharray="4,4" />
                 </svg>
 
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg border-2 border-white">
-                    <MapPin className="w-5 h-5 fill-white" />
+                  <div className="w-8 h-8 rounded-full bg-cyan-500 text-black flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                    <MapPin className="w-4 h-4" />
                   </div>
-                  <span className="bg-slate-900 text-white text-[10px] font-mono px-2 py-0.5 rounded shadow mt-1">
-                    GPS: 40.7128, -74.0060
-                  </span>
-                </div>
-
-                <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-xs px-2 py-1 rounded text-[10px] text-slate-600 border border-slate-200">
-                  Interactive GIS Pinning
                 </div>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-              3. Issue Type
+            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 mb-3">
+              03. Anomaly Classification
             </label>
             <select
               value={issueType}
               onChange={(e) => setIssueType(e.target.value as IssueType)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white cursor-pointer"
+              className="w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 cursor-pointer appearance-none"
             >
               <option value="Light Completely Out">Light Completely Out</option>
               <option value="Flickering Continuously">Flickering Continuously</option>
@@ -234,36 +220,39 @@ export const ReportIssuePage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-              4. Short Description
+            <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-400 mb-3">
+              04. Additional Context
             </label>
             <textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide a brief description of the issue..."
+              placeholder="Describe the severity or specific details..."
               required
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition-all resize-none"
             />
           </div>
 
-          <div className="pt-2">
+          <div className="pt-4">
             <button
               type="submit"
               disabled={isAnalyzing}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-heading font-semibold text-base sm:text-lg rounded-xl shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60"
+              className="group relative w-full inline-flex items-center justify-center p-[1px] rounded-xl overflow-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isAnalyzing ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  <span>Checking Nearby Complaints with AI...</span>
-                </>
-              ) : (
-                <>
-                  <span>Check & Submit</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              <span className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0%,#8b5cf6_40%,#06b6d4_50%,transparent_60%)] animate-[spin_4s_linear_infinite]" />
+              <span className="relative w-full flex items-center justify-center gap-3 px-8 py-4 bg-[#0a0a0a] rounded-xl font-medium text-white transition-all group-hover:bg-[#151515]">
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
+                    <span>Running Synapse Radar...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Initialize Scan & Submit</span>
+                    <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </span>
             </button>
           </div>
         </form>
