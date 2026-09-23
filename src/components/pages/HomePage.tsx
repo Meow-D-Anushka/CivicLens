@@ -50,24 +50,24 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Infinite Marquee Section */}
-      <section className="w-full border-b border-black/10 py-8 marquee-container overflow-hidden bg-white relative">
-        <div className="animate-marquee flex items-center gap-12 whitespace-nowrap">
+      {/* Infinite Marquee Section (Shortened Font Size) */}
+      <section className="w-full border-b border-black/10 py-6 marquee-container overflow-hidden bg-white relative">
+        <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
           {[...Array(8)].map((_, i) => (
             <React.Fragment key={i}>
-              <span className="text-4xl md:text-6xl font-bold tracking-tighter text-black uppercase">Active AI Radar</span>
-              <span className="text-2xl text-[#737373]">///</span>
-              <span className="text-4xl md:text-6xl font-bold tracking-tighter text-black uppercase">Instant Verification</span>
-              <span className="text-2xl text-[#737373]">///</span>
+              <span className="text-xl md:text-3xl font-bold tracking-tight text-black uppercase">Active AI Radar</span>
+              <span className="text-lg text-[#737373]">///</span>
+              <span className="text-xl md:text-3xl font-bold tracking-tight text-black uppercase">Instant Verification</span>
+              <span className="text-lg text-[#737373]">///</span>
             </React.Fragment>
           ))}
         </div>
       </section>
 
-      {/* Feature Grid with Grayscale Interaction */}
+      {/* Feature Grid with Fixed Streetlight Image */}
       <section className="w-full max-w-[1400px] grid grid-cols-1 md:grid-cols-2 gap-12 px-6 py-24">
         <div className="flex flex-col gap-6">
-          <div className="overflow-hidden bg-[#F5F5F5] aspect-[4/3] w-full">
+          <div className="overflow-hidden bg-[#F5F5F5] aspect-[4/3] w-full border border-black/10">
             <img 
               src="https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=1200" 
               alt="Dark Road" 
@@ -81,10 +81,10 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-6 md:pt-32">
-          <div className="overflow-hidden bg-[#F5F5F5] aspect-[4/3] w-full">
+          <div className="overflow-hidden bg-[#F5F5F5] aspect-[4/3] w-full border border-black/10">
             <img 
-              src="https://images.unsplash.com/photo-1517409265814-726715694c92?auto=format&fit=crop&q=80&w=1200" 
-              alt="Infrastructure" 
+              src="/flickering.jpg" 
+              alt="Streetlight Infrastructure" 
               className="editorial-image w-full h-full object-cover"
             />
           </div>
