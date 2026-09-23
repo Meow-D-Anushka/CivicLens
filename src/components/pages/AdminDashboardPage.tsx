@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { mockComplaints } from '../../data/mockComplaints';
 import { 
   BarChart3, 
   Map as MapIcon, 
@@ -13,26 +12,34 @@ import {
 import { ComplaintStatus, Complaint } from '../../types';
 
 export const AdminDashboardPage: React.FC = () => {
-  const { navigateTo } = useApp();
+  const { complaints, navigateTo } = useApp();
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list');
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'All'>('All');
-  const [selectedPin, setSelectedPin] = useState<Complaint | null>(mockComplaints[0]);
+  const [selectedPin, setSelectedPin] = useState<Complaint | null>(complaints[0] || null);
 
-  const total = mockComplaints.length;
-  const pending = mockComplaints.filter(c => c.status === 'Pending Review').length;
-  const verified = mockComplaints.filter(c => c.status === 'Verified Outage').length;
-  const duplicate = mockComplaints.filter(c => c.status === 'Duplicate').length;
+  const total = complaints.length;
+  const pending = complaints.filter(c => c.status === 'Pending Review' || c.status === 'Likely Duplicate').length;
+  const verified = complaints.filter(c => c.status === 'Verified Outage').length;
+  const duplicate = complaints.filter(c => c.status === 'Duplicate' || c.status === 'Likely Duplicate').length;
 
-  const filteredComplaints = mockComplaints.filter(c => 
+  const filteredComplaints = complaints.filter(c => 
     statusFilter === 'All' ? true : c.status === statusFilter
   );
 
-  const mapPins = [
-    { complaint: mockComplaints[0], top: '35%', left: '25%' },
-    { complaint: mockComplaints[1], top: '35%', left: '65%' },
-    { complaint: mockComplaints[2], top: '65%', left: '45%' },
-    { complaint: mockComplaints[3], top: '85%', left: '65%' },
-  ];
+  // Map dynamic complaints to map pins safely
+  const mapPins = complaints.slice(0, 5).map((complaint, index) => {
+    const coords = [
+      { top: '35%', left: '25%' },
+      { top: '35%', left: '65%' },
+      { top: '65%', left: '45%' },
+      { top: '85%', left: '65%' },
+      { top: '20%', left: '45%' },
+    ];
+    return {
+      complaint,
+      ...(coords[index] || { top: '50%', left: '50%' })
+    };
+  });
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-20 relative z-10">
