@@ -1,78 +1,44 @@
 import { Complaint } from '../types';
 
-export const INITIAL_COMPLAINTS: Complaint[] = [
+export const mockComplaints: Complaint[] = [
+  {
+    id: 'CL-1436',
+    locationName: 'retibunder road, parsik nagar',
+    issueType: 'Flickering Continuously',
+    description: 'Streetlight flickering intermittently causing visibility hazards at night.',
+    status: 'Pending Review',
+    photoUrl: '/flickering.jpg',
+    aiConfidence: 94,
+    createdAt: new Date().toISOString(),
+  },
   {
     id: 'CL-1042',
-    // Dark, moody streetlamp
-    photoUrl: 'https://images.pexels.com/photos/800150/pexels-photo-800150.jpeg?auto=compress&cs=tinysrgb&w=600',
     locationName: 'Oak Street & 4th Avenue',
-    coords: { lat: 40.7128, lng: -74.0060 },
-    timeAgo: '10 min ago',
-    issueType: 'Outage',
-    status: 'Likely Duplicate',
-    description: 'Streetlight is completely out. It is very dark at the intersection.',
-    aiResult: 'Likely Duplicate',
-    factors: {
-      imageSimilarityPercent: 91,
-      proximityMeters: 15,
-      complaintDensityCount: 4,
-    },
-    aiExplanation: '4 complaints are within 20m and have highly similar photos.',
-    similarComplaintId: 'CL-1039',
+    issueType: 'Light Completely Out',
+    description: 'The pole fixture is completely dead, leaving the intersection in pitch black.',
+    status: 'Verified Outage',
+    photoUrl: '/broken-pole.jpg',
+    aiConfidence: 91,
+    createdAt: new Date(Date.now() - 600000).toISOString(),
   },
   {
     id: 'CL-1045',
-    // Dim, isolated street light at night
-    photoUrl: 'https://images.pexels.com/photos/1234035/pexels-photo-1234035.jpeg?auto=compress&cs=tinysrgb&w=600',
     locationName: 'Pine Road, Near Park',
-    coords: { lat: 40.7135, lng: -74.0051 },
-    timeAgo: '45 min ago',
-    issueType: 'Flickering',
-    status: 'Separate Fault',
-    description: 'The light keeps flickering on and off, making it hard to see.',
-    aiResult: 'Separate Fault',
-    factors: {
-      imageSimilarityPercent: 12,
-      proximityMeters: 300,
-      complaintDensityCount: 1,
-    },
-    aiExplanation: 'No similar active complaints found in this immediate radius.',
+    issueType: 'Damaged Pole / Exposed Wiring',
+    description: 'Pole base cracked with exposed live wiring after recent weather.',
+    status: 'Pending Review',
+    photoUrl: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
+    aiConfidence: 88,
+    createdAt: new Date(Date.now() - 2700000).toISOString(),
   },
   {
     id: 'CL-1048',
-    // Silhouetted street light pole in the dark
-    photoUrl: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=600',
     locationName: 'Maple Drive, Block A',
-    coords: { lat: 40.7112, lng: -74.0080 },
-    timeAgo: '2 hours ago',
-    issueType: 'Physical Damage',
-    status: 'Separate Fault',
-    description: 'The pole looks like it was hit by a car, it is leaning over.',
-    aiResult: 'Separate Fault',
-    factors: {
-      imageSimilarityPercent: 5,
-      proximityMeters: 800,
-      complaintDensityCount: 1,
-    },
-    aiExplanation: 'Visual markers indicate unique structural damage not present in other reports.',
-  },
-  {
-    id: 'CL-1051',
-    // The working pitch-black street image
-    photoUrl: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
-    locationName: 'Cedar Boulevard',
-    coords: { lat: 40.7150, lng: -74.0030 },
-    timeAgo: '3 hours ago',
-    issueType: 'Outage',
-    status: 'Likely Duplicate',
-    description: 'Entire street is pitch black. Multiple lights out in a row.',
-    aiResult: 'Possible Wider Outage',
-    factors: {
-      imageSimilarityPercent: 88,
-      proximityMeters: 45,
-      complaintDensityCount: 7,
-    },
-    aiExplanation: 'High volume of outage reports along this grid line suggests a circuit failure.',
-    similarComplaintId: 'CL-1050',
+    issueType: 'Light On During Daytime',
+    description: 'Fixture remains illuminated 24/7 wasting grid energy.',
+    status: 'Duplicate',
+    photoUrl: 'https://images.unsplash.com/photo-1517409265814-726715694c92?auto=format&fit=crop&q=80&w=600',
+    aiConfidence: 85,
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
   }
-];  
+];
