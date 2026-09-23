@@ -192,20 +192,23 @@ export const ReportIssuePage: React.FC = () => {
                 />
               </div>
 
-              <div className="relative h-32 w-full rounded-xl overflow-hidden border border-white/10 bg-[#050505]">
-                <svg viewBox="0 0 600 240" className="w-full h-full object-cover opacity-40">
-                  <rect width="600" height="240" fill="#050505" />
-                  <line x1="0" y1="120" x2="600" y2="120" stroke="#1f2937" strokeWidth="24" />
-                  <line x1="300" y1="0" x2="300" y2="240" stroke="#1f2937" strokeWidth="24" />
-                  <circle cx="300" cy="120" r="45" fill="rgba(6,182,212,0.1)" stroke="#06b6d4" strokeWidth="1" strokeDasharray="4,4" />
+              {/* Updated map code block */}
+              <div className="relative h-32 w-full rounded-xl overflow-hidden border border-white/10 bg-white">
+                <svg viewBox="0 0 600 240" className="w-full h-full object-cover">
+                  <rect width="600" height="240" fill="#ffffff" />
+                  <line x1="0" y1="120" x2="600" y2="120" stroke="#f1f5f9" strokeWidth="32" />
+                  <line x1="300" y1="0" x2="300" y2="240" stroke="#f1f5f9" strokeWidth="32" />
+                  <circle cx="300" cy="120" r="45" fill="rgba(6,182,212,0.15)" stroke="#06b6d4" strokeWidth="1.5" strokeDasharray="4,4" />
                 </svg>
 
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-full bg-cyan-500 text-black flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500 text-black flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.6)] border-2 border-white">
                     <MapPin className="w-4 h-4" />
                   </div>
                 </div>
               </div>
+              {/* End of updated map block */}
+
             </div>
           </div>
 
