@@ -5,36 +5,32 @@ export const Header: React.FC = () => {
   const { currentView, navigateTo } = useApp();
 
   return (
-    <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-2xl z-50 glass-panel rounded-full px-6 py-3 flex items-center justify-between shadow-[0_0_20px_-10px_rgba(139,92,246,0.2)]">
-      {/* Logo */}
+    <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-black/10 px-6 py-5 flex items-center justify-between">
       <div 
-        className="flex items-center gap-2 cursor-pointer"
+        className="flex items-center cursor-pointer"
         onClick={() => navigateTo('home')}
       >
-        <div className="w-2 h-2 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 shadow-[0_0_10px_rgba(139,92,246,0.6)]"></div>
-        <span className="font-heading text-2xl tracking-tight text-white mt-1">CivicLens</span>
+        <span className="font-bold text-2xl tracking-[-0.05em] text-black uppercase">CivicLens</span>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="hidden md:flex items-center gap-6">
+      <nav className="hidden md:flex items-center gap-10">
         <button 
           onClick={() => navigateTo('home')}
-          className={`text-[11px] uppercase tracking-widest font-medium transition-colors hover:text-white ${currentView === 'home' ? 'text-white' : 'text-neutral-400'}`}
+          className={`editorial-meta transition-colors cursor-none ${currentView === 'home' ? 'text-black' : 'text-[#737373] hover:text-black'}`}
         >
           System
         </button>
         <button 
           onClick={() => navigateTo('dashboard')}
-          className={`text-[11px] uppercase tracking-widest font-medium transition-colors hover:text-white ${currentView === 'dashboard' ? 'text-white' : 'text-neutral-400'}`}
+          className={`editorial-meta transition-colors cursor-none ${currentView === 'dashboard' ? 'text-black' : 'text-[#737373] hover:text-black'}`}
         >
           Dashboard
         </button>
       </nav>
 
-      {/* CTA Button */}
       <button 
         onClick={() => navigateTo('report')}
-        className="bg-white text-black px-5 py-2 rounded-full text-xs font-semibold hover:bg-neutral-200 transition-colors"
+        className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-[0.1em] hover:bg-[#525252] transition-colors cursor-none"
       >
         Report Issue
       </button>
