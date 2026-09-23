@@ -42,3 +42,6 @@ export const mockComplaints: Complaint[] = [
     createdAt: new Date(Date.now() - 7200000).toISOString(),
   }
 ];
+
+// Export both names to satisfy any file referencing either one
+export const INITIAL_COMPLAINTS = mockComplaints;
