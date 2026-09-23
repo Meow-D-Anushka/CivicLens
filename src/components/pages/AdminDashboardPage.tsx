@@ -1,382 +1,176 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { mockComplaints } from '../../data/mockComplaints';
 import { 
-  MapPin, 
+  BarChart3, 
+  Map as MapIcon, 
+  Search, 
+  Filter, 
   Clock, 
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react';
+import { ComplaintStatus } from '../../types';
 
 export const AdminDashboardPage: React.FC = () => {
-  const { complaints, selectedComplaint, selectComplaint, navigateTo } = useApp();
+  const { navigateTo } = useApp();
+  const [activeTab, setActiveTab] = useState<'list' | 'map'>('list');
+  const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'All'>('All');
 
-  // Stats
-  const totalReports = 248;
-  const uniqueIssues = 84;
-  const duplicates = 142;
-  const widerOutages = 22;
+  const total = mockComplaints.length;
+  const pending = mockComplaints.filter(c => c.status === 'Pending Review').length;
+  const verified = mockComplaints.filter(c => c.status === 'Verified Outage').length;
+  const duplicate = mockComplaints.filter(c => c.status === 'Duplicate').length;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Likely Duplicate':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Likely Duplicate
-          </span>
-        );
-      case 'Wider Outage':
-      case 'Possible Wider Outage':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            Wider Outage
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Separate Fault
-          </span>
-        );
-    }
-  };
-
-  const current = selectedComplaint || complaints[0];
+  const filteredComplaints = mockComplaints.filter(c => 
+    statusFilter === 'All' ? true : c.status === statusFilter
+  );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div className="max-w-[1400px] mx-auto px-6 py-20 relative z-10">
       
-      {/* Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <h1 className="font-heading font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
-            Municipal Operations Dashboard
+          <span className="editorial-meta text-black mb-3 block">02 // Control Center</span>
+          <h1 className="text-5xl md:text-6xl text-black uppercase tracking-[-0.05em]">
+            System Operations
           </h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            Real-time streetlight reports, spatial clustering, and AI deduplication.
-          </p>
         </div>
 
-        <button
-          onClick={() => navigateTo('report')}
-          className="self-start sm:self-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
-        >
-          + Submit New Report
-        </button>
-      </div>
-
-      {/* 4 Small Statistic Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Card 1: Total Reports */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500 block mb-1">
-            Total Reports
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900">
-              {totalReports}
-            </span>
-            <span className="text-[11px] text-slate-500 font-medium">+14 today</span>
-          </div>
-        </div>
-
-        {/* Card 2: Unique Issues */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500 block mb-1">
-            Unique Issues
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="font-heading font-extrabold text-2xl sm:text-3xl text-blue-700">
-              {uniqueIssues}
-            </span>
-            <span className="text-[11px] text-blue-600 font-medium">Filtered</span>
-          </div>
-        </div>
-
-        {/* Card 3: Duplicates */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500 block mb-1">
-            Duplicates
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="font-heading font-extrabold text-2xl sm:text-3xl text-amber-600">
-              {duplicates}
-            </span>
-            <span className="text-[11px] text-amber-700 font-semibold">57% saved</span>
-          </div>
-        </div>
-
-        {/* Card 4: Possible Wider Outages */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500 block mb-1">
-            Possible Wider Outages
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="font-heading font-extrabold text-2xl sm:text-3xl text-red-600">
-              {widerOutages}
-            </span>
-            <span className="text-[11px] text-red-700 font-medium">3 active clusters</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Main Content: Map + Recent Complaints List + Detail Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Large City Map with Simple Colored Pins (7 cols on lg) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-600" />
-              <h2 className="font-heading font-bold text-base text-slate-900">
-                City Streetlight Grid Map
-              </h2>
-            </div>
-            
-            {/* Simple Map Legend */}
-            <div className="flex items-center gap-3 text-xs text-slate-600">
-              <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Unique
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Duplicate
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Outage
-              </span>
-            </div>
-          </div>
-
-          {/* Map Canvas */}
-          <div className="relative flex-1 min-h-[360px] rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-            <svg viewBox="0 0 700 400" className="w-full h-full object-cover">
-              {/* Background City Grid */}
-              <rect width="700" height="400" fill="#F8FAFC" />
-              
-              {/* River line */}
-              <path d="M 0 260 Q 200 240 380 300 T 700 220" fill="none" stroke="#E0F2FE" strokeWidth="36" />
-              <path d="M 0 260 Q 200 240 380 300 T 700 220" fill="none" stroke="#BAE6FD" strokeWidth="20" />
-
-              {/* Major arterial avenues */}
-              <line x1="0" y1="120" x2="700" y2="120" stroke="#CBD5E1" strokeWidth="18" />
-              <line x1="0" y1="200" x2="700" y2="200" stroke="#E2E8F0" strokeWidth="12" />
-              <line x1="0" y1="320" x2="700" y2="320" stroke="#CBD5E1" strokeWidth="16" />
-
-              {/* Cross Streets */}
-              <line x1="160" y1="0" x2="160" y2="400" stroke="#CBD5E1" strokeWidth="14" />
-              <line x1="320" y1="0" x2="320" y2="400" stroke="#E2E8F0" strokeWidth="12" />
-              <line x1="480" y1="0" x2="480" y2="400" stroke="#CBD5E1" strokeWidth="16" />
-              <line x1="600" y1="0" x2="600" y2="400" stroke="#E2E8F0" strokeWidth="10" />
-
-              {/* Wider Outage Cluster Area Halo */}
-              <circle cx="480" cy="120" r="50" fill="rgba(239, 68, 68, 0.12)" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="4,4" />
-            </svg>
-
-            {/* Interactive Pins */}
-            {complaints.map((c, index) => {
-              const isSelected = current.id === c.id;
-              
-              // Coordinates mapping onto our svg 700x400
-              const pinCoords: Record<string, { top: string; left: string }> = {
-                'CL-1042': { top: '30%', left: '23%' },
-                'CL-1039': { top: '32%', left: '26%' },
-                'CL-1045': { top: '30%', left: '69%' },
-                'CL-1048': { top: '50%', left: '46%' },
-                'CL-1051': { top: '80%', left: '68%' },
-              };
-              const pos = pinCoords[c.id] || { top: `${25 + index * 15}%`, left: `${30 + index * 12}%` };
-
-              // Fixed syntax error in ternary operator
-              const pinColor = 
-                c.aiResult === 'Possible Wider Outage'
-                  ? 'bg-red-600 text-white'
-                  : c.aiResult === 'Likely Duplicate'
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-blue-600 text-white';
-
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => selectComplaint(c)}
-                  style={{ top: pos.top, left: pos.left }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 p-1.5 rounded-full shadow-md transition-transform duration-150 cursor-pointer ${pinColor} ${
-                    isSelected ? 'scale-125 ring-4 ring-blue-400 z-20' : 'hover:scale-110 z-10'
-                  }`}
-                  title={`${c.id}: ${c.locationName}`}
-                >
-                  <MapPin className="w-4 h-4 fill-white" />
-                </button>
-              );
-            })}
-
-            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-1.5 rounded-lg text-[11px] text-slate-600 border border-slate-200 shadow-xs">
-              Showing 5 Active Pin Markers • Click a pin to inspect
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Small Recent Complaints List (5 cols on lg) */}
-        <div className="lg:col-span-5 space-y-4 flex flex-col">
-          
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
-            <h2 className="font-heading font-bold text-base text-slate-900 mb-3">
-              Recent Complaints
-            </h2>
-
-            {/* List */}
-            <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-              {complaints.map((item) => {
-                const isSelected = current.id === item.id;
-
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => selectComplaint(item)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50/60 shadow-xs'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80'
-                    }`}
-                  >
-                    {/* Photo */}
-                    <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-100">
-                      <img
-                        src={item.photoUrl}
-                        alt="Complaint thumbnail"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-mono text-[11px] font-bold text-slate-500">
-                          {item.id}
-                        </span>
-                        <span className="text-[11px] text-slate-400 flex items-center gap-1 shrink-0">
-                          <Clock className="w-3 h-3" />
-                          {item.timeAgo}
-                        </span>
-                      </div>
-
-                      <h4 className="text-xs font-semibold text-slate-800 truncate">
-                        {item.locationName}
-                      </h4>
-
-                      <div className="mt-1">
-                        {getStatusBadge(item.status)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* Small Detail Panel: Rendered for the Currently Selected Complaint */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                Selected: {current.id}
-              </span>
-              <span className="text-xs text-slate-500">• {current.issueType}</span>
-            </div>
-            <h3 className="font-heading font-bold text-lg text-slate-900 mt-1">
-              {current.locationName}
-            </h3>
-          </div>
-
-          <button
-            onClick={() => navigateTo('details', current.id)}
-            className="self-start sm:self-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-lg shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+        <div className="flex bg-white p-1 border border-black">
+          <button 
+            onClick={() => setActiveTab('list')}
+            className={`flex items-center gap-2 px-6 py-2.5 text-xs font-bold uppercase tracking-[0.1em] transition-all cursor-none ${
+              activeTab === 'list' ? 'bg-black text-white' : 'text-black hover:bg-[#F5F5F5]'
+            }`}
           >
-            <span>Open Full AI Analysis</span>
-            <ArrowRight className="w-4 h-4" />
+            <BarChart3 className="w-4 h-4" />
+            <span>Feed</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('map')}
+            className={`flex items-center gap-2 px-6 py-2.5 text-xs font-bold uppercase tracking-[0.1em] transition-all cursor-none ${
+              activeTab === 'map' ? 'bg-black text-white' : 'text-black hover:bg-[#F5F5F5]'
+            }`}
+          >
+            <MapIcon className="w-4 h-4" />
+            <span>GIS Map</span>
           </button>
         </div>
-
-        {/* Detail Panel Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          
-          {/* 1. Complaint photo */}
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">
-              Complaint Photo
-            </span>
-            <div className="h-40 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-              <img
-                src={current.photoUrl}
-                alt="Complaint detailed photo"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-
-          {/* 2. Location details & Similar complaints */}
-          <div className="space-y-3">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1">
-                Location Details
-              </span>
-              <p className="text-sm font-semibold text-slate-800">
-                {current.locationName}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                {current.description}
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1">
-                Similar Nearby Complaints
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-slate-100 px-2 py-1 rounded font-medium text-slate-700">
-                  {current.factors.complaintDensityCount} reported within 20m
-                </span>
-                <span className="text-xs text-slate-500">
-                  Proximity: {current.factors.proximityMeters}m
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. AI Result */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-2">
-                AI Deduplication Result
-              </span>
-
-              <div className="mb-2">
-                {getStatusBadge(current.aiResult)}
-              </div>
-
-              <p className="text-xs text-slate-600 leading-relaxed">
-                {current.aiExplanation}
-              </p>
-            </div>
-
-            <div className="pt-3 border-t border-slate-200/60 mt-3 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Image match:</span>
-              <span className="font-bold text-slate-800">{current.factors.imageSimilarityPercent}%</span>
-            </div>
-          </div>
-
-        </div>
-
       </div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {[
+          { label: 'Total Ingested', val: total },
+          { label: 'Awaiting Action', val: pending },
+          { label: 'Verified Outages', val: verified },
+          { label: 'AI Deduplicated', val: duplicate }
+        ].map((stat, idx) => (
+          <div key={idx} className="bg-white border border-black p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <p className="editorial-meta text-xs mb-2">{stat.label}</p>
+            <p className="text-5xl font-bold tracking-tight text-black">{stat.val}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Main List Area */}
+      <div className="bg-white border border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        {/* Toolbar */}
+        <div className="p-6 border-b border-black flex flex-col sm:flex-row gap-4 justify-between items-center bg-[#FAFAFA]">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#737373]" />
+            <input 
+              type="text" 
+              placeholder="Query report ID, location..." 
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-black text-sm text-black placeholder:text-[#737373] focus:outline-none cursor-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            <Filter className="w-4 h-4 text-[#737373] shrink-0 mr-2" />
+            {['All', 'Pending Review', 'Verified Outage', 'Duplicate'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status as any)}
+                className={`whitespace-nowrap px-4 py-2 text-xs font-mono uppercase tracking-wider border transition-colors cursor-none ${
+                  statusFilter === status 
+                    ? 'bg-black text-white border-black' 
+                    : 'bg-white text-black border-black/20 hover:border-black'
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#F5F5F5] border-b border-black">
+                <th className="px-6 py-4 editorial-meta text-xs text-black">Report ID</th>
+                <th className="px-6 py-4 editorial-meta text-xs text-black">Location</th>
+                <th className="px-6 py-4 editorial-meta text-xs text-black">Classification</th>
+                <th className="px-6 py-4 editorial-meta text-xs text-black">Confidence</th>
+                <th className="px-6 py-4 editorial-meta text-xs text-black">Status</th>
+                <th className="px-6 py-4 editorial-meta text-xs text-black text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/10">
+              {filteredComplaints.map((complaint) => (
+                <tr 
+                  key={complaint.id} 
+                  className="hover:bg-[#FAFAFA] transition-colors group cursor-none"
+                  onClick={() => navigateTo('details', complaint.id)}
+                >
+                  <td className="px-6 py-5">
+                    <span className="font-mono text-xs font-bold text-black">{complaint.id}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="text-sm font-bold text-black">{complaint.locationName}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="text-sm text-[#525252]">{complaint.issueType}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    {complaint.aiConfidence ? (
+                      <span className="font-mono text-xs font-bold text-black">{complaint.aiConfidence}%</span>
+                    ) : (
+                      <span className="text-sm text-[#737373]">-</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider border border-black bg-white text-black">
+                      {complaint.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <button 
+                      className="text-xs font-bold uppercase tracking-wider text-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end w-full gap-1 cursor-none"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateTo('details', complaint.id);
+                      }}
+                    >
+                      Inspect <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {filteredComplaints.length === 0 && (
+            <div className="py-20 text-center flex flex-col items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-[#737373] mb-4" />
+              <p className="text-[#525252] font-mono text-xs uppercase">No telemetry data matches the current filters.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
