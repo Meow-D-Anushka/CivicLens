@@ -26,18 +26,27 @@ export const AdminDashboardPage: React.FC = () => {
     statusFilter === 'All' ? true : c.status === statusFilter
   );
 
-  // Map dynamic complaints to map pins safely
-  const mapPins = complaints.slice(0, 5).map((complaint, index) => {
-    const coords = [
-      { top: '35%', left: '25%' },
-      { top: '35%', left: '65%' },
-      { top: '65%', left: '45%' },
-      { top: '85%', left: '65%' },
-      { top: '20%', left: '45%' },
-    ];
+  // Map each unique complaint to distinct map coordinates based on location name or ID
+  const mapPins = complaints.map((complaint) => {
+    let pos = { top: '50%', left: '50%' };
+    const loc = complaint.locationName.toLowerCase();
+    
+    if (loc.includes('retibunder') || complaint.id === 'CL-1436') {
+      pos = { top: '35%', left: '25%' };
+    } else if (loc.includes('oak') || complaint.id === 'CL-1042') {
+      pos = { top: '35%', left: '65%' };
+    } else if (loc.includes('pine') || complaint.id === 'CL-1045') {
+      pos = { top: '65%', left: '45%' };
+    } else if (loc.includes('maple') || complaint.id === 'CL-1048') {
+      pos = { top: '85%', left: '65%' };
+    } else {
+      // Dynamic fallback for any newly submitted reports
+      pos = { top: '20%', left: '45%' };
+    }
+
     return {
       complaint,
-      ...(coords[index] || { top: '50%', left: '50%' })
+      ...pos
     };
   });
 
