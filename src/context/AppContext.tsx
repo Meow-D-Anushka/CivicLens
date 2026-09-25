@@ -18,6 +18,7 @@ interface AppContextType {
     locationName: string;
     issueType: IssueType;
     description: string;
+    coords?: { lat: number; lng: number };
   }) => void;
   confirmReportAction: (complaintId: string, action: 'Confirmed Duplicate' | 'Kept Separate') => void;
   selectComplaint: (complaint: Complaint) => void;
@@ -86,6 +87,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     locationName: string;
     issueType: IssueType;
     description: string;
+    coords?: { lat: number; lng: number };
   }) => {
     const newId = `CL-${Math.floor(1050 + Math.random() * 900)}`;
     
@@ -96,14 +98,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const proxMeters = Math.floor(Math.random() * (45 - 5 + 1)) + 5;
     const density = Math.floor(Math.random() * 4) + 1;
 
+    // Use the reporter's real coordinates when available (from the browser's
+    // Geolocation API). Only fall back to a randomized placeholder near the
+    // matched complaint if no real location was captured.
+    const coords = report.coords || {
+      lat: matched.coords.lat + (Math.random() * 0.01 - 0.005),
+      lng: matched.coords.lng + (Math.random() * 0.01 - 0.005),
+    };
+
     const newComplaint: Complaint = {
       id: newId,
       photoUrl: report.photoUrl || matched.photoUrl,
       locationName: report.locationName || 'Unspecified Location',
-      coords: { 
-        lat: 40.7128 + (Math.random() * 0.01 - 0.005), 
-        lng: -74.0060 + (Math.random() * 0.01 - 0.005) 
-      },
+      coords,
       timeAgo: 'Just now',
       issueType: report.issueType,
       description: report.description,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Camera, 
@@ -6,20 +6,119 @@ import {
   AlertTriangle, 
   ArrowRight, 
   Eye, 
-  RefreshCw 
+  RefreshCw,
+  Upload,
+  LocateFixed,
+  X,
 } from 'lucide-react';
 
 type ExtendedIssueType = 'Light Completely Out' | 'Flickering Continuously' | 'Damaged Pole / Exposed Wiring' | 'Light On During Daytime' | 'Other (specify)';
 
+type LocationStatus = 'idle' | 'locating' | 'success' | 'error';
+
 export const ReportIssuePage: React.FC = () => {
   const { submitNewReport, submissionResult, navigateTo, clearSubmissionResult } = useApp();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [photoFileName, setPhotoFileName] = useState<string>('');
+  const [photoError, setPhotoError] = useState<string>('');
+
   const [locationName, setLocationName] = useState('');
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationStatus, setLocationStatus] = useState<LocationStatus>('idle');
+  const [locationError, setLocationError] = useState('');
+
   const [issueType, setIssueType] = useState<ExtendedIssueType>('Light Completely Out');
   const [customIssueType, setCustomIssueType] = useState('');
   const [description, setDescription] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoError('');
+
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('Please select an image file.');
+      return;
+    }
+
+    // Cap at 8MB so we don't choke the browser turning it into a data URL.
+    if (file.size > 8 * 1024 * 1024) {
+      setPhotoError('Image is too large (max 8MB).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPhotoUrl(reader.result as string);
+      setPhotoFileName(file.name);
+    };
+    reader.onerror = () => {
+      setPhotoError('Could not read that file. Please try another image.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearPhoto = () => {
+    setPhotoUrl('');
+    setPhotoFileName('');
+    setPhotoError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleUseMyLocation = () => {
+    setLocationError('');
+
+    if (!('geolocation' in navigator)) {
+      setLocationStatus('error');
+      setLocationError('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    setLocationStatus('locating');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setCoords({ lat: latitude, lng: longitude });
+
+        try {
+          // Reverse-geocode the real coordinates into a human-readable
+          // address via OpenStreetMap's free Nominatim API (no key needed).
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            { headers: { Accept: 'application/json' } }
+          );
+
+          if (!res.ok) throw new Error('Reverse geocoding failed');
+
+          const data = await res.json();
+          const label = data?.display_name as string | undefined;
+
+          setLocationName(label || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          setLocationStatus('success');
+        } catch (err) {
+          // Coordinates are still real and usable even if the address
+          // lookup fails — just fall back to showing raw coordinates.
+          setLocationName(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          setLocationStatus('success');
+        }
+      },
+      (err) => {
+        setLocationStatus('error');
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError('Location permission denied. Enter the location manually below.');
+        } else {
+          setLocationError('Could not determine your location. Enter it manually below.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,15 +135,10 @@ export const ReportIssuePage: React.FC = () => {
         locationName,
         issueType: finalIssueType as any,
         description,
+        coords: coords || undefined,
       });
     }, 700);
   };
-
-  const samplePhotos = [
-    { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
-    { label: 'Broken Pole', url: '/broken-pole.jpg' },
-    { label: 'Flickering', url: '/flickering.jpg' },
-  ];
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-20 relative z-10">
@@ -140,7 +234,17 @@ export const ReportIssuePage: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative w-32 h-24 overflow-hidden border border-black bg-black/5 flex items-center justify-center shrink-0">
                   {photoUrl ? (
-                    <img src={photoUrl} alt="Preview" className="editorial-image w-full h-full object-cover" />
+                    <>
+                      <img src={photoUrl} alt="Preview" className="editorial-image w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={clearPhoto}
+                        aria-label="Remove photo"
+                        className="absolute top-1 right-1 w-5 h-5 bg-black text-white flex items-center justify-center cursor-none"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </>
                   ) : (
                     <Camera className="w-6 h-6 text-[#737373]" />
                   )}
@@ -148,26 +252,38 @@ export const ReportIssuePage: React.FC = () => {
 
                 <div className="flex-1 text-center sm:text-left">
                   <p className="text-sm text-[#525252] mb-4">
-                    Upload or select a test asset of the infrastructure anomaly.
+                    Upload a real photo of the infrastructure anomaly from your device.
                   </p>
-                  
-                  <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                    <span className="editorial-meta mr-2 text-xs">Assets:</span>
-                    {samplePhotos.map((p, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setPhotoUrl(p.url)}
-                        className={`text-xs px-3 py-1.5 border transition-all cursor-none uppercase font-mono ${
-                          photoUrl === p.url
-                            ? 'bg-black text-white border-black'
-                            : 'bg-white text-black border-black/20 hover:border-black'
-                        }`}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="photo-upload"
+                  />
+
+                  <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs px-4 py-2 border border-black bg-black text-white hover:bg-[#525252] transition-colors cursor-none uppercase font-mono flex items-center gap-2"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {photoUrl ? 'Replace Photo' : 'Upload Photo'}
+                    </button>
+                    {photoFileName && (
+                      <span className="text-xs text-[#525252] font-mono truncate max-w-[160px]">
+                        {photoFileName}
+                      </span>
+                    )}
                   </div>
+
+                  {photoError && (
+                    <p className="text-xs text-red-600 mt-3">{photoError}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -179,17 +295,49 @@ export const ReportIssuePage: React.FC = () => {
             </label>
 
             <div className="space-y-4">
-              <div className="relative">
-                <MapPin className="w-4 h-4 text-black absolute left-4 top-3.5" />
-                <input
-                  type="text"
-                  value={locationName}
-                  onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="e.g. Sector 17, Main Boulevard"
-                  required
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-black text-sm text-black placeholder:text-[#737373] focus:outline-none focus:ring-1 focus:ring-black cursor-none"
-                />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <MapPin className="w-4 h-4 text-black absolute left-4 top-3.5" />
+                  <input
+                    type="text"
+                    value={locationName}
+                    onChange={(e) => {
+                      setLocationName(e.target.value);
+                      // Manual edits invalidate the captured GPS coords so we
+                      // don't silently attach stale coordinates to a typed address.
+                      if (coords) setCoords(null);
+                      if (locationStatus !== 'idle') setLocationStatus('idle');
+                    }}
+                    placeholder="e.g. Sector 17, Main Boulevard"
+                    required
+                    className="w-full pl-11 pr-4 py-3 bg-white border border-black text-sm text-black placeholder:text-[#737373] focus:outline-none focus:ring-1 focus:ring-black cursor-none"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleUseMyLocation}
+                  disabled={locationStatus === 'locating'}
+                  className="shrink-0 px-4 py-3 border border-black bg-white hover:bg-[#F5F5F5] text-black text-xs uppercase font-mono tracking-[0.05em] transition-colors cursor-none flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {locationStatus === 'locating' ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <LocateFixed className="w-3.5 h-3.5" />
+                  )}
+                  <span>{locationStatus === 'locating' ? 'Locating…' : 'Use My Location'}</span>
+                </button>
               </div>
+
+              {locationStatus === 'error' && locationError && (
+                <p className="text-xs text-red-600">{locationError}</p>
+              )}
+
+              {coords && locationStatus === 'success' && (
+                <p className="text-xs text-[#525252] font-mono">
+                  GPS lock: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                </p>
+              )}
 
               <div className="relative h-32 w-full overflow-hidden border border-black bg-white">
                 <svg viewBox="0 0 600 240" className="w-full h-full object-cover">
