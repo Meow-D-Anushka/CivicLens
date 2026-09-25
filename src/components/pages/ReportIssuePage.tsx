@@ -140,6 +140,12 @@ export const ReportIssuePage: React.FC = () => {
     }, 700);
   };
 
+  const samplePhotos = [
+    { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
+    { label: 'Broken Pole', url: '/broken-pole.jpg' },
+    { label: 'Flickering', url: '/flickering.jpg' },
+  ];
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-20 relative z-10">
       <div className="mb-12">
@@ -284,6 +290,29 @@ export const ReportIssuePage: React.FC = () => {
                   {photoError && (
                     <p className="text-xs text-red-600 mt-3">{photoError}</p>
                   )}
+
+                  <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap mt-4 pt-4 border-t border-black/10">
+                    <span className="editorial-meta mr-1 text-xs">Or try a sample:</span>
+                    {samplePhotos.map((p, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setPhotoUrl(p.url);
+                          setPhotoFileName('');
+                          setPhotoError('');
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className={`text-xs px-3 py-1.5 border transition-all cursor-none uppercase font-mono ${
+                          photoUrl === p.url
+                            ? 'bg-black text-white border-black'
+                            : 'bg-white text-black border-black/20 hover:border-black'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -339,19 +368,36 @@ export const ReportIssuePage: React.FC = () => {
                 </p>
               )}
 
-              <div className="relative h-32 w-full overflow-hidden border border-black bg-white">
-                <svg viewBox="0 0 600 240" className="w-full h-full object-cover">
-                  <rect width="600" height="240" fill="#ffffff" />
-                  <line x1="0" y1="120" x2="600" y2="120" stroke="#f1f5f9" strokeWidth="32" />
-                  <line x1="300" y1="0" x2="300" y2="240" stroke="#f1f5f9" strokeWidth="32" />
-                  <circle cx="300" cy="120" r="45" fill="rgba(0,0,0,0.05)" stroke="#000000" strokeWidth="1.5" strokeDasharray="4,4" />
-                </svg>
+              <div className="relative h-40 w-full overflow-hidden border border-black bg-white">
+                {coords ? (
+                  <iframe
+                    key={`${coords.lat}-${coords.lng}`}
+                    title="Reported location map"
+                    className="w-full h-full border-0"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${coords.lng - 0.004}%2C${coords.lat - 0.003}%2C${coords.lng + 0.004}%2C${coords.lat + 0.003}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`}
+                  />
+                ) : (
+                  <>
+                    <svg viewBox="0 0 600 240" className="w-full h-full object-cover">
+                      <rect width="600" height="240" fill="#ffffff" />
+                      <line x1="0" y1="120" x2="600" y2="120" stroke="#f1f5f9" strokeWidth="32" />
+                      <line x1="300" y1="0" x2="300" y2="240" stroke="#f1f5f9" strokeWidth="32" />
+                      <circle cx="300" cy="120" r="45" fill="rgba(0,0,0,0.05)" stroke="#000000" strokeWidth="1.5" strokeDasharray="4,4" />
+                    </svg>
 
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
-                  <div className="w-6 h-6 bg-black text-white flex items-center justify-center">
-                    <MapPin className="w-3 h-3" />
-                  </div>
-                </div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center">
+                      <div className="w-6 h-6 bg-black text-white flex items-center justify-center">
+                        <MapPin className="w-3 h-3" />
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/70 pointer-events-none">
+                      <span className="editorial-meta text-[10px] text-[#737373] bg-white/90 px-3 py-1 border border-black/10">
+                        Map appears once a location is set
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
