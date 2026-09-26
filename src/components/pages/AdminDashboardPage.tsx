@@ -26,29 +26,48 @@ export const AdminDashboardPage: React.FC = () => {
     statusFilter === 'All' ? true : c.status === statusFilter
   );
 
-  // Map each unique complaint to distinct map coordinates based on location name or ID
-  const mapPins = complaints.map((complaint) => {
-    let pos = { top: '50%', left: '50%' };
-    const loc = complaint.locationName.toLowerCase();
-    
-    if (loc.includes('retibunder') || complaint.id === 'CL-1436') {
-      pos = { top: '35%', left: '25%' };
-    } else if (loc.includes('oak') || complaint.id === 'CL-1042') {
-      pos = { top: '35%', left: '65%' };
-    } else if (loc.includes('pine') || complaint.id === 'CL-1045') {
-      pos = { top: '65%', left: '45%' };
-    } else if (loc.includes('maple') || complaint.id === 'CL-1048') {
-      pos = { top: '85%', left: '65%' };
-    } else {
-      // Dynamic fallback for any newly submitted reports
-      pos = { top: '20%', left: '45%' };
-    }
+  // Plot each complaint using its *real* stored lat/lng, normalized against
+  // the bounding box of every report's coordinates. This is a stylized grid,
+  // not a georeferenced map projection, so it's a linear min/max scale
+  // rather than real map math — good enough to place pins relative to each
+  // other correctly on this SVG canvas.
+  const coordsList = complaints
+    .map((c) => c.coords)
+    .filter((c): c is { lat: number; lng: number } => !!c && Number.isFinite(c.lat) && Number.isFinite(c.lng));
 
+  const lats = coordsList.map((c) => c.lat);
+  const lngs = coordsList.map((c) => c.lng);
+  const minLat = lats.length ? Math.min(...lats) : 19.02;
+  const maxLat = lats.length ? Math.max(...lats) : 19.04;
+  const minLng = lngs.length ? Math.min(...lngs) : 73.02;
+  const maxLng = lngs.length ? Math.max(...lngs) : 73.04;
+
+  // Pad the range so pins don't sit flush against the edge, and guard
+  // against a zero-width range when every report shares one location.
+  const latPad = Math.max((maxLat - minLat) * 0.15, 0.001);
+  const lngPad = Math.max((maxLng - minLng) * 0.15, 0.001);
+  const latLo = minLat - latPad;
+  const latHi = maxLat + latPad;
+  const lngLo = minLng - lngPad;
+  const lngHi = maxLng + lngPad;
+
+  function toMapPosition(coords?: { lat: number; lng: number }) {
+    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
+      return { top: '50%', left: '50%' };
+    }
+    const leftPct = ((coords.lng - lngLo) / (lngHi - lngLo)) * 100;
+    // Latitude increases northward, but screen Y increases downward — invert.
+    const topPct = (1 - (coords.lat - latLo) / (latHi - latLo)) * 100;
     return {
-      complaint,
-      ...pos
+      top: `${Math.min(95, Math.max(5, topPct)).toFixed(1)}%`,
+      left: `${Math.min(95, Math.max(5, leftPct)).toFixed(1)}%`,
     };
-  });
+  }
+
+  const mapPins = complaints.map((complaint) => ({
+    complaint,
+    ...toMapPosition(complaint.coords),
+  }));
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-20 relative z-10">
