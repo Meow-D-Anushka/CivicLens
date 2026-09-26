@@ -1,44 +1,61 @@
 # CivicLens API
 
-Express backend for CivicLens. Deployable two ways:
+Express backend for CivicLens. This is a **separate deployable root** from
+the frontend — the frontend (repo root) and this backend (`backend/`) are
+deployed independently, and talk to each other over HTTP using a configured
+base URL (see "Connecting the frontend" below).
 
-## Option A — Vercel (serverless)
+Deploy this as a normal persistent Node web service (Render, Railway,
+Fly.io, a VPS, etc.) — **not** as Vercel serverless functions. `server.js`
+runs `app.listen()` and keeps a long-lived process, which is what this app
+wants: a persistent `pg` connection pool and (if you ever add real disk
+storage) a writable filesystem. Serverless platforms with ephemeral/read-only
+filesystems and per-invocation cold starts are a bad fit for this app.
 
-This directory is set up to deploy as its own Vercel project:
+## Deploying (Render, as an example)
 
-- `api/index.js` exports the Express app; Vercel calls it as a serverless
-  function on every request (via the rewrite in `vercel.json`).
-- `server.js` (with `app.listen()`) is **not** used on Vercel — it's only
-  for local dev and Option B below.
+1. Push this repo to GitHub (frontend at repo root, this folder at `backend/`).
+2. In Render: **New → Web Service** → connect the repo.
+3. **Root Directory**: `backend`
+4. **Build Command**: `npm install`
+5. **Start Command**: `npm start`
+6. **Environment variables** (Render → Environment):
+   - `DATABASE_URL` — your Aiven (or other) Postgres connection string
+   - `FRONTEND_URL` — the deployed frontend's origin, e.g. `https://your-app.vercel.app` (no trailing slash)
+   - `NODE_ENV` — `production`
+   - `PGSSL_REJECT_UNAUTHORIZED` — `false` (or `true` + `PGSSLROOTCERT` if you've uploaded Aiven's CA cert)
+   - `PORT` — Render sets this automatically; you don't need to set it
+7. Deploy. Once it's live, run the migration once (Render → Shell tab, or a
+   one-off job): `npm run migrate` — this applies `src/db/schema.sql` and
+   creates the `reports` table.
+8. Note the resulting service URL (e.g. `https://civiclens-api.onrender.com`)
+   — the frontend needs it.
 
-**Setup:**
-1. Create a new Vercel project from this repo.
-2. Project Settings → **Root Directory** → `backend`.
-3. Add environment variables (Settings → Environment Variables):
-   - `FRONTEND_URL` — your deployed frontend's URL (used for CORS).
-   - `NODE_ENV` — `production`.
-4. Deploy. No build command needed — it's plain ESM, no compile step.
+Railway works the same way: New Project → Deploy from repo → set **Root
+Directory** to `backend`, same env vars, same build/start commands.
 
-**Caveat:** Vercel's filesystem is read-only except `/tmp`, which is wiped
-between invocations. If/when file-upload routes are added with `multer`,
-use `multer.memoryStorage()` and push files to S3/Cloudinary/etc. rather
-than `diskStorage()`.
+## Connecting the frontend
 
-## Option B — Render / Railway (persistent server)
+The frontend reads the backend's URL from `VITE_API_URL` at build time
+(see `src/lib/api.ts` at the repo root). In your frontend's host (Vercel):
 
-Works out of the box since `app.listen()` runs as a normal long-lived process:
+- Project Settings → Environment Variables → add `VITE_API_URL` = your
+  backend's URL from step 8 above (no trailing slash), e.g.
+  `https://civiclens-api.onrender.com`.
+- Redeploy the frontend so the new env var is baked into the build.
 
-1. New Web Service → connect repo → **Root Directory** → `backend`.
-2. Build command: `npm install`. Start command: `npm start`.
-3. Set the same env vars as above, plus `PORT` if the platform requires it
-   (Render/Railway usually inject this automatically).
-
-This option supports real disk storage for file uploads without extra work.
+And make sure the backend's `FRONTEND_URL` env var (step 6) matches the
+frontend's real deployed origin exactly — `src/app.js` uses it as the CORS
+allow-origin, so a mismatch will show up as CORS errors in the browser
+console, not a server error.
 
 ## Env vars
 
-| Variable       | Default                  | Used for                        |
-|----------------|---------------------------|----------------------------------|
-| `PORT`         | `5000`                    | Local/Option B port              |
-| `FRONTEND_URL` | `http://localhost:3000`  | CORS allowed origin              |
-| `NODE_ENV`     | `development`             | Logging format, error verbosity  |
+| Variable                    | Default                  | Used for                          |
+|------------------------------|---------------------------|------------------------------------|
+| `PORT`                       | `5000`                    | Port the server listens on         |
+| `FRONTEND_URL`                | `http://localhost:3000`  | CORS allowed origin                |
+| `NODE_ENV`                    | `development`             | Logging format, error verbosity    |
+| `DATABASE_URL`                 | —                          | Postgres connection string         |
+| `PGSSL_REJECT_UNAUTHORIZED`    | `false`                    | Strict TLS verification for Postgres |
+| `PGSSLROOTCERT`                | —                          | Path to Aiven's CA cert (only if the above is `true`) |
