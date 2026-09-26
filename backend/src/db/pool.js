@@ -17,6 +17,31 @@ if (!env.databaseUrl) {
 
 const isLocal = /localhost|127\.0\.0\.1/.test(env.databaseUrl);
 
+// node-postgres parses any `sslmode`/`ssl*` query params out of the
+// connection string and merges them into its config — and those parsed
+// values win over the explicit `ssl` option below (a well-known pg
+// footgun: https://github.com/brianc/node-postgres/issues/2009 and
+// similar). Aiven's copy-pasted "Service URI" includes `?sslmode=require`,
+// which silently overrides `rejectUnauthorized: false` and brings back
+// "self-signed certificate in certificate chain" no matter what `ssl` is
+// passed here. Stripping it makes the explicit `buildSslConfig()` below
+// the only thing that controls TLS behavior, regardless of what's in the
+// URL someone pastes into DATABASE_URL.
+function stripSslModeParam(connectionString) {
+  if (!connectionString) return connectionString;
+  try {
+    const url = new URL(connectionString);
+    url.searchParams.delete('sslmode');
+    return url.toString();
+  } catch {
+    // Not a parseable URL (e.g. empty/placeholder) — leave it as-is and
+    // let pg raise its own error when the pool actually connects.
+    return connectionString;
+  }
+}
+
+const connectionString = stripSslModeParam(env.databaseUrl);
+
 function buildSslConfig() {
   if (isLocal) return false;
 
@@ -31,7 +56,7 @@ function buildSslConfig() {
 }
 
 export const pool = new Pool({
-  connectionString: env.databaseUrl || undefined,
+  connectionString: connectionString || undefined,
   // Aiven's Postgres requires SSL. Its server cert chains to Aiven's own CA,
   // which isn't in Node's default trust store, so a strict TLS check fails
   // out of the box unless PGSSLROOTCERT points at that CA cert.
