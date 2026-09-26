@@ -18,9 +18,9 @@ export const AdminDashboardPage: React.FC = () => {
   const [selectedPin, setSelectedPin] = useState<Complaint | null>(complaints[0] || null);
 
   const total = complaints.length;
-  const pending = complaints.filter(c => c.status === 'Pending Review' || c.status === 'Likely Duplicate').length;
-  const verified = complaints.filter(c => c.status === 'Verified Outage').length;
-  const duplicate = complaints.filter(c => c.status === 'Duplicate' || c.status === 'Likely Duplicate').length;
+  const pending = complaints.filter(c => c.status === 'Pending').length;
+  const verified = complaints.filter(c => c.status === 'Separate Fault' || c.status === 'Wider Outage').length;
+  const duplicate = complaints.filter(c => c.status === 'Likely Duplicate').length;
 
   const filteredComplaints = complaints.filter(c => 
     statusFilter === 'All' ? true : c.status === statusFilter
@@ -211,7 +211,7 @@ export const AdminDashboardPage: React.FC = () => {
 
             <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
               <Filter className="w-4 h-4 text-[#737373] shrink-0 mr-2" />
-              {['All', 'Pending Review', 'Verified Outage', 'Duplicate'].map((status) => (
+              {['All', 'Pending', 'Likely Duplicate', 'Separate Fault', 'Wider Outage', 'Resolved'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status as any)}

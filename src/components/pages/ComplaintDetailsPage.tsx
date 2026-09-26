@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { mockComplaints } from '../../data/mockComplaints';
 import { 
   MapPin, 
   Sparkles, 
@@ -9,15 +8,29 @@ import {
 } from 'lucide-react';
 
 export const ComplaintDetailsPage: React.FC = () => {
-  const { selectedComplaintId, selectedComplaint, complaints, confirmReportAction, navigateTo } = useApp();
-  
-  // Find the exact complaint matching the selected ID across mockComplaints
-  const complaint = mockComplaints.find(c => c.id === selectedComplaintId) || selectedComplaint || complaints[0] || mockComplaints[0];
+  const { selectedComplaint, complaints, confirmReportAction, navigateTo } = useApp();
+
+  const complaint = selectedComplaint || complaints[0];
 
   const [isDuplicateConfirmed, setIsDuplicateConfirmed] = useState<boolean>(
-    complaint.confirmedAction === 'Confirmed Duplicate' || complaint.status === 'Likely Duplicate'
+    complaint?.confirmedAction === 'Confirmed Duplicate' || complaint?.status === 'Likely Duplicate'
   );
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+  if (!complaint) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-20 relative z-10 text-center">
+        <p className="editorial-meta text-black mb-4">No report selected</p>
+        <button
+          onClick={() => navigateTo('dashboard')}
+          className="inline-flex items-center gap-2 editorial-meta text-black hover:text-[#525252] transition-colors cursor-none"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Dashboard</span>
+        </button>
+      </div>
+    );
+  }
 
   const handleToggleConfirm = () => {
     if (isDuplicateConfirmed) {
@@ -142,7 +155,7 @@ export const ComplaintDetailsPage: React.FC = () => {
                 <span className="text-sm font-bold text-black">Image Similarity</span>
               </div>
               <span className="font-mono text-2xl font-bold text-black">
-                {complaint.factors?.imageSimilarityPercent || complaint.aiConfidence || 90}%
+                {complaint.factors?.imageSimilarityPercent || 90}%
               </span>
             </div>
 

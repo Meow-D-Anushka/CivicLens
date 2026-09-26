@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { urlToFile } from '../../lib/api';
 import { 
   Camera, 
   MapPin, 
@@ -16,14 +17,21 @@ type ExtendedIssueType = 'Light Completely Out' | 'Flickering Continuously' | 'D
 
 type LocationStatus = 'idle' | 'locating' | 'success' | 'error';
 
+// Used when the reporter doesn't attach their own photo, so the submission
+// still carries a real file through to the backend (which requires one).
+const DEFAULT_PHOTO_URL =
+  'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600';
+
 export const ReportIssuePage: React.FC = () => {
-  const { submitNewReport, submissionResult, navigateTo, clearSubmissionResult } = useApp();
+  const { submitNewReport, submissionResult, navigateTo, clearSubmissionResult, submitError } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoFileName, setPhotoFileName] = useState<string>('');
   const [photoError, setPhotoError] = useState<string>('');
+  const [isLoadingSample, setIsLoadingSample] = useState(false);
 
   const [locationName, setLocationName] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -55,6 +63,7 @@ export const ReportIssuePage: React.FC = () => {
     const reader = new FileReader();
     reader.onload = () => {
       setPhotoUrl(reader.result as string);
+      setPhotoFile(file);
       setPhotoFileName(file.name);
     };
     reader.onerror = () => {
@@ -65,9 +74,27 @@ export const ReportIssuePage: React.FC = () => {
 
   const clearPhoto = () => {
     setPhotoUrl('');
+    setPhotoFile(null);
     setPhotoFileName('');
     setPhotoError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSelectSample = async (sample: { label: string; url: string }) => {
+    setPhotoError('');
+    setIsLoadingSample(true);
+    try {
+      const filename = `${sample.label.toLowerCase().replace(/\s+/g, '-')}.jpg`;
+      const file = await urlToFile(sample.url, filename);
+      setPhotoFile(file);
+      setPhotoUrl(sample.url);
+      setPhotoFileName('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch {
+      setPhotoError('Could not load that sample image. Please try uploading your own.');
+    } finally {
+      setIsLoadingSample(false);
+    }
   };
 
   const handleUseMyLocation = () => {
@@ -120,28 +147,36 @@ export const ReportIssuePage: React.FC = () => {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAnalyzing(true);
-    
+    setPhotoError('');
+
     const finalIssueType = issueType === 'Other (specify)' && customIssueType.trim() !== '' 
       ? customIssueType 
       : issueType;
 
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      submitNewReport({
-        photoUrl: photoUrl || 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600',
+    try {
+      // Fall back to the default sample image so the submission always
+      // carries a real file through to the backend, which requires one.
+      const fileToUpload = photoFile || (await urlToFile(DEFAULT_PHOTO_URL, 'streetlight.jpg'));
+
+      await submitNewReport({
+        photoFile: fileToUpload,
         locationName,
         issueType: finalIssueType as any,
         description,
         coords: coords || undefined,
       });
-    }, 700);
+    } catch {
+      // submitError from context carries the message; nothing else to do here.
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const samplePhotos = [
-    { label: 'Dark Road', url: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&q=80&w=600' },
+    { label: 'Dark Road', url: DEFAULT_PHOTO_URL },
     { label: 'Broken Pole', url: '/broken-pole.jpg' },
     { label: 'Flickering', url: '/flickering.jpg' },
   ];
@@ -297,13 +332,9 @@ export const ReportIssuePage: React.FC = () => {
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => {
-                          setPhotoUrl(p.url);
-                          setPhotoFileName('');
-                          setPhotoError('');
-                          if (fileInputRef.current) fileInputRef.current.value = '';
-                        }}
-                        className={`text-xs px-3 py-1.5 border transition-all cursor-none uppercase font-mono ${
+                        disabled={isLoadingSample}
+                        onClick={() => handleSelectSample(p)}
+                        className={`text-xs px-3 py-1.5 border transition-all cursor-none uppercase font-mono disabled:opacity-50 ${
                           photoUrl === p.url
                             ? 'bg-black text-white border-black'
                             : 'bg-white text-black border-black/20 hover:border-black'
@@ -447,6 +478,10 @@ export const ReportIssuePage: React.FC = () => {
               className="w-full px-4 py-3 bg-white border border-black text-sm text-black placeholder:text-[#737373] focus:outline-none focus:ring-1 focus:ring-black cursor-none resize-none"
             />
           </div>
+
+          {submitError && (
+            <p className="text-xs text-red-600 -mt-4">{submitError}</p>
+          )}
 
           <div className="pt-2">
             <button
