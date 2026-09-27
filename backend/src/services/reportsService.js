@@ -255,11 +255,11 @@ export async function assignReport(publicId, assignedTo) {
 
   const result = await pool.query(
     `UPDATE reports
-     SET assigned_to = $1,
-         assigned_at = CASE WHEN $1 IS NOT NULL THEN now() ELSE NULL END,
+     SET assigned_to = $1::text,
+         assigned_at = CASE WHEN $1::text IS NOT NULL THEN now() ELSE NULL END,
          status = CASE
-           WHEN $1 IS NOT NULL AND status IN ('Pending', 'Separate Fault', 'Wider Outage') THEN 'Assigned'
-           WHEN $1 IS NULL AND status = 'Assigned' THEN 'Pending'
+           WHEN $1::text IS NOT NULL AND status IN ('Pending', 'Separate Fault', 'Wider Outage') THEN 'Assigned'
+           WHEN $1::text IS NULL AND status = 'Assigned' THEN 'Pending'
            ELSE status
          END
      WHERE public_id = $2
