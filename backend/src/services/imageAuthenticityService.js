@@ -62,7 +62,16 @@ export async function analyzeImageAuthenticity({ buffer, mimeType, issueType, de
       generationConfig: {
         temperature: 0.1,
         responseMimeType: 'application/json',
-        maxOutputTokens: 200,
+        // gemini-2.5-flash has "thinking" (internal reasoning) on by
+        // default, and those thinking tokens are billed against — and
+        // truncate — maxOutputTokens. Left alone, the model can burn the
+        // entire budget thinking and return an empty or mid-object-cut-off
+        // response, which is indistinguishable from a real parse failure
+        // downstream. This is a plain visual classification with no need
+        // for multi-step reasoning, so thinking is switched off entirely
+        // rather than just budgeted for.
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 300,
       },
     };
 
@@ -93,8 +102,19 @@ export async function analyzeImageAuthenticity({ buffer, mimeType, issueType, de
     }
 
     const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidate = data?.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text;
+
     if (!text) {
+      // A missing text part with finishReason MAX_TOKENS almost always means
+      // the token budget above was exhausted (e.g. by thinking) before any
+      // visible output was written — logging it distinguishes that from a
+      // genuine empty-response/safety-block case if this ever recurs.
+      console.error(
+        '[imageAuthenticity] No text in Gemini response. finishReason:',
+        candidate?.finishReason,
+        'usage:', data?.usageMetadata
+      );
       return {
         verdict: 'UNCLEAR',
         confidence: 0,
