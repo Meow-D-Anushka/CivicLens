@@ -25,8 +25,25 @@ CREATE TABLE IF NOT EXISTS reports (
   confirmed_action          TEXT,
   photo                     BYTEA NOT NULL,
   photo_mime_type           TEXT NOT NULL,
+  -- Perceptual hash (dHash, hex-encoded) of the uploaded photo, computed
+  -- server-side on submission. Used to find visually-similar nearby reports
+  -- for real duplicate detection (see backend/src/services/imageHashService.js).
+  photo_hash                TEXT,
+  -- AI image-authenticity check (see imageAuthenticityService.js): is the
+  -- photo a genuine camera photo, or does it look AI-generated/manipulated/
+  -- stock/unrelated to the reported issue?
+  fake_check_verdict        TEXT,
+  fake_check_confidence     INTEGER,
+  fake_check_reason         TEXT,
   created_at                TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Adds the AI-analysis columns above to a `reports` table created before
+-- they existed. IF NOT EXISTS makes this safe to re-run on a fresh table too.
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS photo_hash TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS fake_check_verdict TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS fake_check_confidence INTEGER;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS fake_check_reason TEXT;
 
 -- Admin dashboard lists newest-first.
 CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports (created_at DESC);

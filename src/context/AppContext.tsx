@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Complaint, PageView, IssueType } from '../types';
 import { INITIAL_COMPLAINTS } from '../data/mockComplaints';
-import { fetchReports, createReport, updateReportAction as apiUpdateReportAction } from '../lib/api';
+import { fetchReports, fetchReportById, createReport, updateReportAction as apiUpdateReportAction } from '../lib/api';
 
 interface AppContextType {
   currentView: PageView;
@@ -130,57 +130,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }) => {
     setSubmitError(null);
 
-    // Pick an existing complaint to simulate the AI proximity/visual match
-    // against. There's nothing to match on the very first-ever report.
-    const randomIndex = Math.floor(Math.random() * Math.min(complaints.length, 4));
-    const matched = complaints.length > 0 ? complaints[randomIndex] || complaints[0] : null;
-
-    const simPercent = Math.floor(Math.random() * (98 - 72 + 1)) + 72;
-    const proxMeters = Math.floor(Math.random() * (45 - 5 + 1)) + 5;
-    const density = Math.floor(Math.random() * 4) + 1;
-
-    // Use the reporter's real coordinates when available (from the browser's
-    // Geolocation API). Only fall back to a randomized placeholder near the
-    // matched complaint if no real location was captured.
-    const coords =
-      report.coords ||
-      (matched
-        ? {
-            lat: matched.coords.lat + (Math.random() * 0.01 - 0.005),
-            lng: matched.coords.lng + (Math.random() * 0.01 - 0.005),
-          }
-        : undefined);
-
     try {
+      // Duplicate detection (perceptual photo hash + geo proximity) and the
+      // AI photo-authenticity check both run server-side, against the real
+      // uploaded photo and real coordinates — see backend/src/controllers/
+      // reportsController.js. Nothing here is simulated.
       const newComplaint = await createReport({
         photoFile: report.photoFile,
         issueType: report.issueType,
         description: report.description,
         locationName: report.locationName || 'Unspecified Location',
-        coords,
-        status: 'Likely Duplicate',
-        aiResult: 'Likely Duplicate',
-        imageSimilarityPercent: simPercent,
-        proximityMeters: proxMeters,
-        complaintDensityCount: density,
-        aiExplanation: `${density} similar complaints found within a 50m radius with matching visual features.`,
-        similarComplaintId: matched?.id,
+        coords: report.coords,
       });
 
       setComplaints((prev) => [newComplaint, ...prev]);
 
-      if (matched) {
-        setSubmissionResult({
-          isChecking: false,
-          hasMatch: true,
-          pendingComplaint: newComplaint,
-          matchedComplaint: matched,
-        });
-      } else {
-        // Nothing to compare the very first report against — just take the
-        // reporter straight to the dashboard so they see it landed.
-        navigateTo('dashboard', newComplaint.id);
+      if (newComplaint.aiResult === 'Likely Duplicate' && newComplaint.similarComplaintId) {
+        // Look for the matched report in what we already have locally first
+        // to avoid an extra round trip; fall back to fetching it directly
+        // (e.g. it hasn't loaded into local state yet).
+        const matched =
+          complaints.find((c) => c.id === newComplaint.similarComplaintId) ||
+          (await fetchReportById(newComplaint.similarComplaintId).catch(() => null));
+
+        if (matched) {
+          setSubmissionResult({
+            isChecking: false,
+            hasMatch: true,
+            pendingComplaint: newComplaint,
+            matchedComplaint: matched,
+          });
+          return;
+        }
       }
+
+      // No confident duplicate match — take the reporter straight to the
+      // dashboard so they see the new report landed.
+      navigateTo('dashboard', newComplaint.id);
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : 'Could not submit the report. Please try again.'

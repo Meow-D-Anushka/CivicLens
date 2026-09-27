@@ -24,6 +24,7 @@ filesystems and per-invocation cold starts are a bad fit for this app.
    - `FRONTEND_URL` — the deployed frontend's origin, e.g. `https://your-app.vercel.app` (no trailing slash)
    - `NODE_ENV` — `production`
    - `PGSSL_REJECT_UNAUTHORIZED` — `false` (or `true` + `PGSSLROOTCERT` if you've uploaded Aiven's CA cert)
+   - `GEMINI_API_KEY` — a free key from https://aistudio.google.com/apikey, powers the AI photo-authenticity check on submission. Reports still submit fine without it — the check just reports "not configured" instead of a real verdict.
    - `PORT` — Render sets this automatically; you don't need to set it
 7. Deploy. Once it's live, run the migration once (Render → Shell tab, or a
    one-off job): `npm run migrate` — this applies `src/db/schema.sql` and
@@ -59,3 +60,13 @@ console, not a server error.
 | `DATABASE_URL`                 | —                          | Postgres connection string         |
 | `PGSSL_REJECT_UNAUTHORIZED`    | `false`                    | Strict TLS verification for Postgres |
 | `PGSSLROOTCERT`                | —                          | Path to Aiven's CA cert (only if the above is `true`) |
+| `GEMINI_API_KEY`               | —                          | Google AI Studio key for the AI photo-authenticity check on submission |
+
+## AI image analysis (duplicate & authenticity detection)
+
+Every `POST /api/reports` submission runs two independent checks server-side, both computed from the actual uploaded photo — nothing here is trusted from the client:
+
+- **Duplicate detection** (`src/services/imageHashService.js` + `duplicateDetectionService.js`): a perceptual hash (dHash) of the photo is computed and compared, via Hamming distance, against every other report's hash within a 150m radius. A high-similarity nearby match is classified as "Likely Duplicate"; several nearby reports with no single strong match are flagged "Possible Wider Outage"; otherwise the report stands as a "Separate Fault". This needs no API key or external service — it's pure image processing (via `sharp`) and geo-distance math.
+- **Authenticity check** (`src/services/imageAuthenticityService.js`): the photo is sent to Gemini's vision model (`GEMINI_API_KEY`) along with the reported issue type/description, and asked whether it looks like a genuine camera photo or shows signs of being AI-generated, digitally manipulated, a stock image, or unrelated to the stated issue. Returned as a verdict + confidence + one-line reason, stored per-report and shown as "Image Authenticity" on the complaint details page. Without a `GEMINI_API_KEY`, this degrades to an "UNCLEAR / not configured" result rather than blocking submission.
+
+Both write to new columns on `reports` (`photo_hash`, `fake_check_verdict`, `fake_check_confidence`, `fake_check_reason`). Run `npm run migrate` again after pulling this in — the migration uses `ADD COLUMN IF NOT EXISTS`, so it's safe to re-run against an existing database.

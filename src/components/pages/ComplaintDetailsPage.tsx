@@ -4,8 +4,23 @@ import {
   MapPin, 
   Sparkles, 
   CheckCircle2, 
-  ArrowLeft 
+  ArrowLeft,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
 } from 'lucide-react';
+import { FakeCheckVerdict } from '../../types';
+
+const FAKE_CHECK_DISPLAY: Record<
+  FakeCheckVerdict,
+  { label: string; tone: 'ok' | 'warn' | 'unknown' }
+> = {
+  REAL_PHOTO: { label: 'Looks Like a Real Photo', tone: 'ok' },
+  LIKELY_AI_GENERATED: { label: 'Likely AI-Generated', tone: 'warn' },
+  LIKELY_MANIPULATED: { label: 'Likely Manipulated', tone: 'warn' },
+  STOCK_OR_UNRELATED: { label: 'Stock / Unrelated Image', tone: 'warn' },
+  UNCLEAR: { label: 'Unclear — Reviewed Manually', tone: 'unknown' },
+};
 
 export const ComplaintDetailsPage: React.FC = () => {
   const { selectedComplaint, complaints, confirmReportAction, navigateTo } = useApp();
@@ -196,6 +211,39 @@ export const ComplaintDetailsPage: React.FC = () => {
               “{complaint.aiExplanation || complaint.description}”
             </p>
           </div>
+
+          {/* Image Authenticity Block */}
+          {complaint.fakeCheck && (() => {
+            const display = FAKE_CHECK_DISPLAY[complaint.fakeCheck.verdict] || FAKE_CHECK_DISPLAY.UNCLEAR;
+            const Icon = display.tone === 'ok' ? ShieldCheck : display.tone === 'warn' ? ShieldAlert : ShieldQuestion;
+            const toneClasses =
+              display.tone === 'warn'
+                ? 'border-red-600 bg-red-50'
+                : display.tone === 'ok'
+                ? 'border-black bg-[#FAFAFA]'
+                : 'border-black/30 bg-[#FAFAFA]';
+            return (
+              <div className={`p-5 border space-y-2 ${toneClasses}`}>
+                <div className="flex items-center gap-2">
+                  <Icon className={`w-4 h-4 shrink-0 ${display.tone === 'warn' ? 'text-red-600' : 'text-black'}`} />
+                  <span className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border border-black bg-black text-white">
+                    Image Authenticity
+                  </span>
+                  <span className={`font-bold text-base uppercase ${display.tone === 'warn' ? 'text-red-700' : 'text-black'}`}>
+                    {display.label}
+                  </span>
+                  {complaint.fakeCheck.confidence > 0 && (
+                    <span className="font-mono text-xs text-[#737373] ml-auto">
+                      {complaint.fakeCheck.confidence}% confidence
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-[#525252] leading-relaxed">
+                  {complaint.fakeCheck.reason}
+                </p>
+              </div>
+            );
+          })()}
 
           {feedbackMessage && (
             <div className="p-3 bg-white border border-black text-xs font-mono uppercase text-black flex items-center gap-2">

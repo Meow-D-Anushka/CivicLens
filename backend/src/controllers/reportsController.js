@@ -1,4 +1,7 @@
 import * as reportsService from '../services/reportsService.js';
+import { computeImageHash } from '../services/imageHashService.js';
+import { findNearbyMatches, classifyMatch } from '../services/duplicateDetectionService.js';
+import { analyzeImageAuthenticity } from '../services/imageAuthenticityService.js';
 
 function toNullableNumber(value) {
   if (value === undefined || value === null || value === '') return null;
@@ -12,20 +15,7 @@ export async function createReport(req, res, next) {
       return res.status(400).json({ success: false, error: 'A photo file is required.' });
     }
 
-    const {
-      issueType,
-      description,
-      locationName,
-      lat,
-      lng,
-      status,
-      aiResult,
-      imageSimilarityPercent,
-      proximityMeters,
-      complaintDensityCount,
-      aiExplanation,
-      similarComplaintId,
-    } = req.body;
+    const { issueType, description, locationName, lat, lng } = req.body;
 
     if (!issueType || !description || !locationName) {
       return res.status(400).json({
@@ -34,21 +24,51 @@ export async function createReport(req, res, next) {
       });
     }
 
+    const numLat = toNullableNumber(lat);
+    const numLng = toNullableNumber(lng);
+
+    // --- Real AI analysis pipeline ---
+    // Everything below is computed server-side from the actual uploaded
+    // photo and coordinates. The client cannot pass in its own aiResult,
+    // similarity scores, or authenticity verdict — those used to be
+    // trusted from the request body, which meant any client could report
+    // whatever AI verdict it wanted.
+    //
+    // Run the (independent) perceptual hash + duplicate lookup and the
+    // Gemini authenticity check concurrently to keep submission latency down.
+    const photoHash = await computeImageHash(req.file.buffer);
+
+    const [{ bestMatch, nearbyCount }, fakeCheck] = await Promise.all([
+      findNearbyMatches({ photoHash, lat: numLat, lng: numLng, issueType }),
+      analyzeImageAuthenticity({
+        buffer: req.file.buffer,
+        mimeType: req.file.mimetype,
+        issueType,
+        description,
+      }),
+    ]);
+
+    const match = classifyMatch({ bestMatch, nearbyCount });
+
     const report = await reportsService.createReport({
       issueType,
       description,
       locationName,
-      lat: toNullableNumber(lat),
-      lng: toNullableNumber(lng),
-      status,
-      aiResult,
-      imageSimilarityPercent: toNullableNumber(imageSimilarityPercent),
-      proximityMeters: toNullableNumber(proximityMeters),
-      complaintDensityCount: toNullableNumber(complaintDensityCount),
-      aiExplanation,
-      similarComplaintId,
+      lat: numLat,
+      lng: numLng,
+      status: match.status,
+      aiResult: match.aiResult,
+      imageSimilarityPercent: match.factors.imageSimilarityPercent,
+      proximityMeters: match.factors.proximityMeters,
+      complaintDensityCount: match.factors.complaintDensityCount,
+      aiExplanation: match.aiExplanation,
+      similarComplaintId: match.similarComplaintId,
       photoBuffer: req.file.buffer,
       photoMimeType: req.file.mimetype,
+      photoHash,
+      fakeCheckVerdict: fakeCheck.verdict,
+      fakeCheckConfidence: fakeCheck.confidence,
+      fakeCheckReason: fakeCheck.reason,
     });
 
     res.status(201).json({ success: true, report });

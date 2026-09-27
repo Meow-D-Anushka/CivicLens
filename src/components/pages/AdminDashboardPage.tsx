@@ -7,7 +7,8 @@ import {
   Filter, 
   ArrowRight,
   AlertCircle,
-  MapPin
+  MapPin,
+  ShieldAlert
 } from 'lucide-react';
 import { ComplaintStatus, Complaint } from '../../types';
 
@@ -285,9 +286,23 @@ export const AdminDashboardPage: React.FC = () => {
                       <span className="text-sm text-[#525252]">{complaint.issueType}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider border border-black bg-white text-black">
-                        {complaint.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider border border-black bg-white text-black">
+                          {complaint.status}
+                        </span>
+                        {complaint.fakeCheck &&
+                          ['LIKELY_AI_GENERATED', 'LIKELY_MANIPULATED', 'STOCK_OR_UNRELATED'].includes(
+                            complaint.fakeCheck.verdict
+                          ) && (
+                            <span
+                              title={complaint.fakeCheck.reason}
+                              className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono uppercase tracking-wider border border-red-600 bg-red-50 text-red-700"
+                            >
+                              <ShieldAlert className="w-3 h-3" />
+                              Flagged
+                            </span>
+                          )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 

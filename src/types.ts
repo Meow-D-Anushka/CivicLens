@@ -16,6 +16,21 @@ export type ComplaintStatus =
   | 'Wider Outage'
   | 'Resolved';
 
+// Verdicts from the server-side Gemini vision check run on every uploaded
+// photo (see backend/src/services/imageAuthenticityService.js).
+export type FakeCheckVerdict =
+  | 'REAL_PHOTO'
+  | 'LIKELY_AI_GENERATED'
+  | 'LIKELY_MANIPULATED'
+  | 'STOCK_OR_UNRELATED'
+  | 'UNCLEAR';
+
+export interface FakeCheck {
+  verdict: FakeCheckVerdict;
+  confidence: number; // 0-100
+  reason: string;
+}
+
 export interface Complaint {
   id: string;
   photoUrl: string;
@@ -37,6 +52,7 @@ export interface Complaint {
   aiExplanation: string;
   similarComplaintId?: string;
   confirmedAction?: 'Confirmed Duplicate' | 'Kept Separate' | null;
+  fakeCheck?: FakeCheck;
 }
 
 export type PageView = 'home' | 'report' | 'dashboard' | 'details';

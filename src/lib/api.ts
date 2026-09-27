@@ -1,4 +1,4 @@
-import { Complaint, AIResultType, ComplaintStatus, IssueType } from '../types';
+import { Complaint, AIResultType, ComplaintStatus, IssueType, FakeCheck } from '../types';
 
 const RAW_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export const API_BASE = RAW_API_BASE.replace(/\/+$/, '');
@@ -22,6 +22,7 @@ interface ApiReport {
   aiExplanation: string;
   similarComplaintId?: string;
   confirmedAction: 'Confirmed Duplicate' | 'Kept Separate' | null;
+  fakeCheck?: FakeCheck;
 }
 
 function timeAgoFrom(iso: string): string {
@@ -52,6 +53,7 @@ function toComplaint(report: ApiReport): Complaint {
     aiExplanation: report.aiExplanation,
     similarComplaintId: report.similarComplaintId,
     confirmedAction: report.confirmedAction,
+    fakeCheck: report.fakeCheck,
   };
 }
 
@@ -75,21 +77,25 @@ export async function fetchReports(): Promise<Complaint[]> {
   return (body.reports as ApiReport[]).map(toComplaint);
 }
 
+export async function fetchReportById(id: string): Promise<Complaint | null> {
+  const res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(id)}`);
+  if (res.status === 404) return null;
+  const body = await parseJsonOrThrow(res);
+  return toComplaint(body.report as ApiReport);
+}
+
 export interface NewReportPayload {
   photoFile: File;
   issueType: string;
   description: string;
   locationName: string;
   coords?: { lat: number; lng: number };
-  status?: string;
-  aiResult?: string;
-  imageSimilarityPercent?: number;
-  proximityMeters?: number;
-  complaintDensityCount?: number;
-  aiExplanation?: string;
-  similarComplaintId?: string;
 }
 
+// Duplicate-detection and photo-authenticity results are computed entirely
+// server-side from the uploaded photo (perceptual hashing + a Gemini vision
+// check) — the client only supplies the report's own fields below, and the
+// backend ignores any AI-result fields even if sent, so they can't be spoofed.
 export async function createReport(payload: NewReportPayload): Promise<Complaint> {
   const formData = new FormData();
   formData.append('photo', payload.photoFile, payload.photoFile.name || 'photo.jpg');
@@ -101,19 +107,6 @@ export async function createReport(payload: NewReportPayload): Promise<Complaint
     formData.append('lat', String(payload.coords.lat));
     formData.append('lng', String(payload.coords.lng));
   }
-  if (payload.status) formData.append('status', payload.status);
-  if (payload.aiResult) formData.append('aiResult', payload.aiResult);
-  if (payload.imageSimilarityPercent !== undefined) {
-    formData.append('imageSimilarityPercent', String(payload.imageSimilarityPercent));
-  }
-  if (payload.proximityMeters !== undefined) {
-    formData.append('proximityMeters', String(payload.proximityMeters));
-  }
-  if (payload.complaintDensityCount !== undefined) {
-    formData.append('complaintDensityCount', String(payload.complaintDensityCount));
-  }
-  if (payload.aiExplanation) formData.append('aiExplanation', payload.aiExplanation);
-  if (payload.similarComplaintId) formData.append('similarComplaintId', payload.similarComplaintId);
 
   const res = await fetch(`${API_BASE}/api/reports`, { method: 'POST', body: formData });
   const body = await parseJsonOrThrow(res);

@@ -26,6 +26,13 @@ function mapRow(row) {
     aiExplanation: row.ai_explanation || '',
     similarComplaintId: row.similar_complaint_id || undefined,
     confirmedAction: row.confirmed_action || null,
+    fakeCheck: row.fake_check_verdict
+      ? {
+          verdict: row.fake_check_verdict,
+          confidence: row.fake_check_confidence ?? 0,
+          reason: row.fake_check_reason || '',
+        }
+      : undefined,
   };
 }
 
@@ -44,13 +51,18 @@ export async function createReport({
   similarComplaintId,
   photoBuffer,
   photoMimeType,
+  photoHash,
+  fakeCheckVerdict,
+  fakeCheckConfidence,
+  fakeCheckReason,
 }) {
   const insertResult = await pool.query(
     `INSERT INTO reports (
        issue_type, description, location_name, lat, lng, status, ai_result,
        image_similarity_percent, proximity_meters, complaint_density_count,
-       ai_explanation, similar_complaint_id, photo, photo_mime_type
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       ai_explanation, similar_complaint_id, photo, photo_mime_type,
+       photo_hash, fake_check_verdict, fake_check_confidence, fake_check_reason
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
      RETURNING id`,
     [
       issueType,
@@ -67,6 +79,10 @@ export async function createReport({
       similarComplaintId ?? null,
       photoBuffer,
       photoMimeType,
+      photoHash ?? null,
+      fakeCheckVerdict ?? null,
+      fakeCheckConfidence ?? null,
+      fakeCheckReason ?? null,
     ]
   );
 
@@ -89,7 +105,8 @@ export async function listReports() {
     `SELECT id, public_id, issue_type, description, location_name, lat, lng,
             status, ai_result, image_similarity_percent, proximity_meters,
             complaint_density_count, ai_explanation, similar_complaint_id,
-            confirmed_action, created_at
+            confirmed_action, created_at, fake_check_verdict,
+            fake_check_confidence, fake_check_reason
      FROM reports
      ORDER BY created_at DESC`
   );
@@ -101,7 +118,8 @@ export async function getReportByPublicId(publicId) {
     `SELECT id, public_id, issue_type, description, location_name, lat, lng,
             status, ai_result, image_similarity_percent, proximity_meters,
             complaint_density_count, ai_explanation, similar_complaint_id,
-            confirmed_action, created_at
+            confirmed_action, created_at, fake_check_verdict,
+            fake_check_confidence, fake_check_reason
      FROM reports WHERE public_id = $1`,
     [publicId]
   );
@@ -127,7 +145,8 @@ export async function updateReportAction(publicId, { status, confirmedAction }) 
      RETURNING id, public_id, issue_type, description, location_name, lat, lng,
                status, ai_result, image_similarity_percent, proximity_meters,
                complaint_density_count, ai_explanation, similar_complaint_id,
-               confirmed_action, created_at`,
+               confirmed_action, created_at, fake_check_verdict,
+               fake_check_confidence, fake_check_reason`,
     [status ?? null, confirmedAction ?? null, publicId]
   );
   if (result.rows.length === 0) return null;
