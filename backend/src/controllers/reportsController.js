@@ -1,6 +1,6 @@
 import * as reportsService from '../services/reportsService.js';
 import { computeImageHash } from '../services/imageHashService.js';
-import { findNearbyMatches, classifyMatch } from '../services/duplicateDetectionService.js';
+import { findNearbyMatches, findNearbyReports, classifyMatch } from '../services/duplicateDetectionService.js';
 import { analyzeImageAuthenticity } from '../services/imageAuthenticityService.js';
 
 function toNullableNumber(value) {
@@ -119,6 +119,76 @@ export async function updateReportAction(req, res, next) {
       status,
       confirmedAction,
     });
+    if (!report) {
+      return res.status(404).json({ success: false, error: 'Report not found.' });
+    }
+    res.json({ success: true, report });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// --- Authority verification: grouping duplicates + dispatching maintenance ---
+
+export async function getCandidates(req, res, next) {
+  try {
+    const core = await reportsService.getReportCoreByPublicId(req.params.publicId);
+    if (!core) {
+      return res.status(404).json({ success: false, error: 'Report not found.' });
+    }
+    const candidates = await findNearbyReports({
+      lat: core.lat,
+      lng: core.lng,
+      photoHash: core.photoHash,
+      issueType: core.issueType,
+      excludePublicId: req.params.publicId,
+    });
+    res.json({ success: true, candidates });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function setReportGroup(req, res, next) {
+  try {
+    const { groupWith } = req.body;
+
+    if (groupWith) {
+      if (groupWith === req.params.publicId) {
+        return res.status(400).json({ success: false, error: 'A report cannot be grouped with itself.' });
+      }
+      const target = await reportsService.getReportCoreByPublicId(groupWith);
+      if (!target) {
+        return res.status(400).json({ success: false, error: `No report found with id ${groupWith}.` });
+      }
+    }
+
+    const report = await reportsService.setReportGroup(req.params.publicId, groupWith || null);
+    if (!report) {
+      return res.status(404).json({ success: false, error: 'Report not found.' });
+    }
+    res.json({ success: true, report });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getGroupMembers(req, res, next) {
+  try {
+    const members = await reportsService.getGroupMembers(req.params.publicId);
+    if (members.length === 0) {
+      return res.status(404).json({ success: false, error: 'Report not found.' });
+    }
+    res.json({ success: true, members });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function assignReport(req, res, next) {
+  try {
+    const { assignedTo } = req.body;
+    const report = await reportsService.assignReport(req.params.publicId, assignedTo ?? null);
     if (!report) {
       return res.status(404).json({ success: false, error: 'Report not found.' });
     }

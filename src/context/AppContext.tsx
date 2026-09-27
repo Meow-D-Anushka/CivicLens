@@ -1,7 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Complaint, PageView, IssueType } from '../types';
+import { Complaint, PageView, IssueType, DuplicateCandidate } from '../types';
 import { INITIAL_COMPLAINTS } from '../data/mockComplaints';
-import { fetchReports, fetchReportById, createReport, updateReportAction as apiUpdateReportAction } from '../lib/api';
+import {
+  fetchReports,
+  fetchReportById,
+  createReport,
+  updateReportAction as apiUpdateReportAction,
+  fetchGroupCandidates,
+  fetchGroupMembers,
+  setReportGroup as apiSetReportGroup,
+  assignReport as apiAssignReport,
+} from '../lib/api';
 
 interface AppContextType {
   currentView: PageView;
@@ -27,6 +36,11 @@ interface AppContextType {
   confirmReportAction: (complaintId: string, action: 'Confirmed Duplicate' | 'Kept Separate') => Promise<void>;
   selectComplaint: (complaint: Complaint) => void;
   clearSubmissionResult: () => void;
+  loadGroupCandidates: (complaintId: string) => Promise<DuplicateCandidate[]>;
+  loadGroupMembers: (complaintId: string) => Promise<Complaint[]>;
+  flagAsDuplicateOf: (complaintId: string, groupWith: string) => Promise<void>;
+  ungroupReport: (complaintId: string) => Promise<void>;
+  assignToMaintenance: (complaintId: string, assignedTo: string | null) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -203,6 +217,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSubmissionResult(null);
   };
 
+  // Nearby reports an authority can choose to group this one with. Not
+  // cached in context state — the details page fetches fresh each time it
+  // opens the grouping picker.
+  const loadGroupCandidates = (complaintId: string) => fetchGroupCandidates(complaintId);
+
+  const loadGroupMembers = (complaintId: string) => fetchGroupMembers(complaintId);
+
+  // Applies an updated report to both the list and, if it's the one open on
+  // the details page, the selected complaint — shared by the grouping and
+  // assignment actions below.
+  const applyUpdatedComplaint = (updated: Complaint) => {
+    setComplaints((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    setSelectedComplaint((prev) => (prev && prev.id === updated.id ? updated : prev));
+  };
+
+  const flagAsDuplicateOf = async (complaintId: string, groupWith: string) => {
+    const updated = await apiSetReportGroup(complaintId, groupWith);
+    applyUpdatedComplaint(updated);
+  };
+
+  const ungroupReport = async (complaintId: string) => {
+    const updated = await apiSetReportGroup(complaintId, null);
+    applyUpdatedComplaint(updated);
+  };
+
+  const assignToMaintenance = async (complaintId: string, assignedTo: string | null) => {
+    const updated = await apiAssignReport(complaintId, assignedTo);
+    applyUpdatedComplaint(updated);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -218,6 +262,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         confirmReportAction,
         selectComplaint,
         clearSubmissionResult,
+        loadGroupCandidates,
+        loadGroupMembers,
+        flagAsDuplicateOf,
+        ungroupReport,
+        assignToMaintenance,
       }}
     >
       {children}

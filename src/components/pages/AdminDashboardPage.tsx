@@ -22,6 +22,7 @@ export const AdminDashboardPage: React.FC = () => {
   const pending = complaints.filter(c => c.status === 'Pending').length;
   const verified = complaints.filter(c => c.status === 'Separate Fault' || c.status === 'Wider Outage').length;
   const duplicate = complaints.filter(c => c.status === 'Likely Duplicate').length;
+  const assigned = complaints.filter(c => !!c.assignedTo).length;
 
   const filteredComplaints = complaints.filter(c => 
     statusFilter === 'All' ? true : c.status === statusFilter
@@ -105,12 +106,13 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
         {[
           { label: 'Total Ingested', val: total },
           { label: 'Awaiting Action', val: pending },
           { label: 'Verified Outages', val: verified },
-          { label: 'AI Deduplicated', val: duplicate }
+          { label: 'AI Deduplicated', val: duplicate },
+          { label: 'Dispatched to Crew', val: assigned }
         ].map((stat, idx) => (
           <div key={idx} className="bg-white border border-black p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <p className="editorial-meta text-xs mb-2">{stat.label}</p>
@@ -231,7 +233,7 @@ export const AdminDashboardPage: React.FC = () => {
 
             <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
               <Filter className="w-4 h-4 text-[#737373] shrink-0 mr-2" />
-              {['All', 'Pending', 'Likely Duplicate', 'Separate Fault', 'Wider Outage', 'Resolved'].map((status) => (
+              {['All', 'Pending', 'Likely Duplicate', 'Separate Fault', 'Wider Outage', 'Assigned', 'Resolved'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status as any)}
@@ -257,6 +259,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Location</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Classification</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black">Status</th>
+                  <th className="px-6 py-4 editorial-meta text-xs text-black">Dispatch</th>
                   <th className="px-6 py-4 editorial-meta text-xs text-black text-right">Action</th>
                 </tr>
               </thead>
@@ -302,7 +305,20 @@ export const AdminDashboardPage: React.FC = () => {
                               Flagged
                             </span>
                           )}
+                        {complaint.groupId && (
+                          <span
+                            title={`Grouped under ${complaint.groupId}`}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono uppercase tracking-wider border border-black/40 bg-[#FAFAFA] text-black"
+                          >
+                            Grouped
+                          </span>
+                        )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-mono uppercase text-[#525252]">
+                        {complaint.assignedTo || '—'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 

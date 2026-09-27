@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   MapPin, 
@@ -8,8 +8,22 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldQuestion,
+  Users,
+  UserCog,
+  Loader2,
+  X,
 } from 'lucide-react';
-import { FakeCheckVerdict } from '../../types';
+import { FakeCheckVerdict, Complaint, DuplicateCandidate } from '../../types';
+
+// Quick-pick roster shown alongside the free-text field on the assignment
+// panel. CivicLens has no staff-account system, so an assignment is just a
+// plain-text name/crew stamped onto the report.
+const MAINTENANCE_CREW = [
+  'Electrical Crew A',
+  'Electrical Crew B',
+  'Pole Repair Unit',
+  'On-Call Electrician',
+];
 
 const FAKE_CHECK_DISPLAY: Record<
   FakeCheckVerdict,
@@ -23,7 +37,17 @@ const FAKE_CHECK_DISPLAY: Record<
 };
 
 export const ComplaintDetailsPage: React.FC = () => {
-  const { selectedComplaint, complaints, confirmReportAction, navigateTo } = useApp();
+  const {
+    selectedComplaint,
+    complaints,
+    confirmReportAction,
+    navigateTo,
+    loadGroupCandidates,
+    loadGroupMembers,
+    flagAsDuplicateOf,
+    ungroupReport,
+    assignToMaintenance,
+  } = useApp();
 
   const complaint = selectedComplaint || complaints[0];
 
@@ -31,6 +55,42 @@ export const ComplaintDetailsPage: React.FC = () => {
     complaint?.confirmedAction === 'Confirmed Duplicate' || complaint?.status === 'Likely Duplicate'
   );
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+  // --- Grouping (flag as duplicate of / group with another report) ---
+  const [groupMembers, setGroupMembers] = useState<Complaint[]>([]);
+  const [candidates, setCandidates] = useState<DuplicateCandidate[] | null>(null);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [isGrouping, setIsGrouping] = useState(false);
+  const [groupError, setGroupError] = useState<string | null>(null);
+
+  // --- Assignment to a maintenance crew ---
+  const [assigneeInput, setAssigneeInput] = useState('');
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+
+  const refreshGroupMembers = useCallback(async (id: string) => {
+    try {
+      const members = await loadGroupMembers(id);
+      setGroupMembers(members.filter((m) => m.id !== id));
+    } catch {
+      setGroupMembers([]);
+    }
+  }, [loadGroupMembers]);
+
+  useEffect(() => {
+    if (!complaint) return;
+    setCandidates(null);
+    setSelectedCandidateId(null);
+    setGroupError(null);
+    setAssignError(null);
+    setAssigneeInput(complaint.assignedTo || '');
+    if (complaint.groupId) {
+      refreshGroupMembers(complaint.id);
+    } else {
+      setGroupMembers([]);
+    }
+  }, [complaint?.id, complaint?.groupId, refreshGroupMembers]);
 
   if (!complaint) {
     return (
@@ -56,6 +116,81 @@ export const ComplaintDetailsPage: React.FC = () => {
       setIsDuplicateConfirmed(true);
       confirmReportAction(complaint.id, 'Confirmed Duplicate');
       setFeedbackMessage('Confirmed as Duplicate. Consolidated into main master ticket.');
+    }
+  };
+
+  const handleFindNearby = async () => {
+    setIsLoadingCandidates(true);
+    setGroupError(null);
+    try {
+      const found = await loadGroupCandidates(complaint.id);
+      setCandidates(found);
+    } catch (err) {
+      setGroupError(err instanceof Error ? err.message : 'Could not load nearby reports.');
+      setCandidates([]);
+    } finally {
+      setIsLoadingCandidates(false);
+    }
+  };
+
+  const handleFlagDuplicate = async () => {
+    if (!selectedCandidateId) return;
+    setIsGrouping(true);
+    setGroupError(null);
+    try {
+      await flagAsDuplicateOf(complaint.id, selectedCandidateId);
+      await refreshGroupMembers(complaint.id);
+      setCandidates(null);
+      setSelectedCandidateId(null);
+      setFeedbackMessage(`Grouped with ${selectedCandidateId} as a duplicate report.`);
+    } catch (err) {
+      setGroupError(err instanceof Error ? err.message : 'Could not group these reports.');
+    } finally {
+      setIsGrouping(false);
+    }
+  };
+
+  const handleUngroup = async () => {
+    setIsGrouping(true);
+    setGroupError(null);
+    try {
+      await ungroupReport(complaint.id);
+      setGroupMembers([]);
+      setFeedbackMessage('Removed from duplicate group. Now tracked as a separate fault.');
+    } catch (err) {
+      setGroupError(err instanceof Error ? err.message : 'Could not ungroup this report.');
+    } finally {
+      setIsGrouping(false);
+    }
+  };
+
+  const handleAssign = async (name: string) => {
+    const target = name.trim();
+    if (!target) return;
+    setIsAssigning(true);
+    setAssignError(null);
+    try {
+      await assignToMaintenance(complaint.id, target);
+      setAssigneeInput(target);
+      setFeedbackMessage(`Assigned to ${target}.`);
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : 'Could not assign this report.');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleUnassign = async () => {
+    setIsAssigning(true);
+    setAssignError(null);
+    try {
+      await assignToMaintenance(complaint.id, null);
+      setAssigneeInput('');
+      setFeedbackMessage('Assignment cleared.');
+    } catch (err) {
+      setAssignError(err instanceof Error ? err.message : 'Could not clear this assignment.');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -264,6 +399,196 @@ export const ComplaintDetailsPage: React.FC = () => {
             </button>
           </div>
 
+        </div>
+
+      </div>
+
+      {/* Verification & Dispatch — authority review actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start mt-8">
+
+        {/* Group / Flag Duplicate Panel */}
+        <div className="bg-white border border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-5">
+          <div className="flex items-center gap-2 pb-4 border-b border-black">
+            <Users className="w-5 h-5 text-black" />
+            <h2 className="font-bold text-xl text-black uppercase tracking-tight">
+              Group Duplicate Reports
+            </h2>
+          </div>
+
+          {complaint.groupId && (
+            <div className="p-4 bg-[#FAFAFA] border border-black space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="editorial-meta text-[10px]">
+                  Grouped under {complaint.groupId}
+                </span>
+                <button
+                  onClick={handleUngroup}
+                  disabled={isGrouping}
+                  className="text-[10px] font-bold uppercase tracking-wider text-black hover:text-[#525252] underline cursor-none disabled:opacity-50"
+                >
+                  Ungroup
+                </button>
+              </div>
+              {groupMembers.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {groupMembers.map((m) => (
+                    <li key={m.id} className="flex items-center justify-between text-xs font-mono">
+                      <button
+                        onClick={() => navigateTo('details', m.id)}
+                        className="font-bold text-black hover:underline cursor-none"
+                      >
+                        {m.id}
+                      </button>
+                      <span className="text-[#737373] uppercase truncate ml-3">{m.locationName}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-[#737373] font-mono">No other reports in this group yet.</p>
+              )}
+            </div>
+          )}
+
+          <div>
+            <button
+              onClick={handleFindNearby}
+              disabled={isLoadingCandidates}
+              className="w-full py-3 bg-white hover:bg-[#FAFAFA] text-black border border-black font-bold text-xs uppercase tracking-[0.1em] transition-colors flex items-center justify-center gap-2 cursor-none disabled:opacity-50"
+            >
+              {isLoadingCandidates ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
+              <span>Find Nearby Reports to Group</span>
+            </button>
+          </div>
+
+          {candidates !== null && (
+            <div className="space-y-3">
+              {candidates.length === 0 ? (
+                <p className="text-xs text-[#737373] font-mono uppercase text-center py-4">
+                  No other reports found within range of this location.
+                </p>
+              ) : (
+                <div className="border border-black divide-y divide-black/10 max-h-64 overflow-y-auto">
+                  {candidates.map((c) => (
+                    <label
+                      key={c.id}
+                      className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
+                        selectedCandidateId === c.id ? 'bg-[#FAFAFA]' : 'hover:bg-[#FAFAFA]'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="group-candidate"
+                        checked={selectedCandidateId === c.id}
+                        onChange={() => setSelectedCandidateId(c.id)}
+                        className="cursor-pointer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-black">{c.id}</span>
+                          <span className="text-[10px] text-[#737373] uppercase truncate">{c.locationName}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-[10px] font-mono text-[#737373] uppercase">
+                          <span>{c.imageSimilarityPercent}% photo match</span>
+                          <span>{c.proximityMeters}m away</span>
+                          <span>{c.status}</span>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {candidates.length > 0 && (
+                <button
+                  onClick={handleFlagDuplicate}
+                  disabled={!selectedCandidateId || isGrouping}
+                  className="w-full py-4 bg-black hover:bg-[#525252] text-white font-bold text-xs uppercase tracking-[0.1em] transition-colors flex items-center justify-center gap-2 cursor-none disabled:opacity-50"
+                >
+                  {isGrouping ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <span>Flag as Duplicate & Group</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {groupError && (
+            <div className="p-3 bg-red-50 border border-red-600 text-xs font-mono uppercase text-red-700 flex items-center gap-2">
+              <X className="w-4 h-4 shrink-0" />
+              <span>{groupError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Assign to Maintenance Panel */}
+        <div className="bg-white border border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-5">
+          <div className="flex items-center gap-2 pb-4 border-b border-black">
+            <UserCog className="w-5 h-5 text-black" />
+            <h2 className="font-bold text-xl text-black uppercase tracking-tight">
+              Dispatch to Maintenance
+            </h2>
+          </div>
+
+          {complaint.assignedTo ? (
+            <div className="p-4 bg-[#FAFAFA] border border-black flex items-center justify-between">
+              <div>
+                <span className="editorial-meta text-[10px] block mb-1">Currently Assigned</span>
+                <span className="text-sm font-bold text-black">{complaint.assignedTo}</span>
+              </div>
+              <button
+                onClick={handleUnassign}
+                disabled={isAssigning}
+                className="text-[10px] font-bold uppercase tracking-wider text-black hover:text-[#525252] underline cursor-none disabled:opacity-50"
+              >
+                Unassign
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-[#737373] font-mono uppercase">
+              Not yet dispatched to a crew.
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {MAINTENANCE_CREW.map((name) => (
+              <button
+                key={name}
+                onClick={() => handleAssign(name)}
+                disabled={isAssigning}
+                className={`px-3 py-2 text-[10px] font-mono uppercase tracking-wider border transition-colors cursor-none disabled:opacity-50 ${
+                  complaint.assignedTo === name
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-black border-black/20 hover:border-black'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={assigneeInput}
+              onChange={(e) => setAssigneeInput(e.target.value)}
+              placeholder="Or enter a name / crew..."
+              className="flex-1 px-4 py-3 bg-white border border-black text-sm text-black placeholder:text-[#737373] focus:outline-none cursor-none"
+            />
+            <button
+              onClick={() => handleAssign(assigneeInput)}
+              disabled={isAssigning || !assigneeInput.trim()}
+              className="px-6 py-3 bg-black hover:bg-[#525252] text-white font-bold text-xs uppercase tracking-[0.1em] transition-colors flex items-center justify-center gap-2 cursor-none disabled:opacity-50"
+            >
+              {isAssigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCog className="w-4 h-4" />}
+              <span>Assign</span>
+            </button>
+          </div>
+
+          {assignError && (
+            <div className="p-3 bg-red-50 border border-red-600 text-xs font-mono uppercase text-red-700 flex items-center gap-2">
+              <X className="w-4 h-4 shrink-0" />
+              <span>{assignError}</span>
+            </div>
+          )}
         </div>
 
       </div>

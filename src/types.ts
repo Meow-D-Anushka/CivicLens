@@ -14,6 +14,7 @@ export type ComplaintStatus =
   | 'Likely Duplicate'
   | 'Separate Fault'
   | 'Wider Outage'
+  | 'Assigned'
   | 'Resolved';
 
 // Verdicts from the server-side Gemini vision check run on every uploaded
@@ -52,7 +53,27 @@ export interface Complaint {
   aiExplanation: string;
   similarComplaintId?: string;
   confirmedAction?: 'Confirmed Duplicate' | 'Kept Separate' | null;
+  // Manual verification by an authority reviewer, on top of the AI result.
+  // groupId is the public_id of the "root" report this one has been
+  // consolidated under (set on both the duplicate and the root itself).
+  groupId?: string;
+  assignedTo?: string | null;
+  assignedAt?: string | null;
   fakeCheck?: FakeCheck;
+}
+
+// A nearby report surfaced for an authority to consider grouping the current
+// report with — see `fetchGroupCandidates` in lib/api.ts.
+export interface DuplicateCandidate {
+  id: string;
+  locationName: string;
+  issueType: IssueType;
+  status: ComplaintStatus;
+  groupId?: string;
+  createdAt: string;
+  proximityMeters: number;
+  imageSimilarityPercent: number;
+  sameIssueType: boolean;
 }
 
 export type PageView = 'home' | 'report' | 'dashboard' | 'details';

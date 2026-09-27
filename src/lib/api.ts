@@ -1,4 +1,4 @@
-import { Complaint, AIResultType, ComplaintStatus, IssueType, FakeCheck } from '../types';
+import { Complaint, AIResultType, ComplaintStatus, IssueType, FakeCheck, DuplicateCandidate } from '../types';
 
 const RAW_API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export const API_BASE = RAW_API_BASE.replace(/\/+$/, '');
@@ -22,7 +22,23 @@ interface ApiReport {
   aiExplanation: string;
   similarComplaintId?: string;
   confirmedAction: 'Confirmed Duplicate' | 'Kept Separate' | null;
+  groupId?: string;
+  assignedTo?: string | null;
+  assignedAt?: string | null;
   fakeCheck?: FakeCheck;
+}
+
+// Shape returned by GET /:publicId/candidates (see duplicateDetectionService.js).
+interface ApiCandidate {
+  publicId: string;
+  locationName: string;
+  issueType: string;
+  status: string;
+  groupId?: string;
+  createdAt: string;
+  proximityMeters: number;
+  imageSimilarityPercent: number;
+  sameIssueType: boolean;
 }
 
 function timeAgoFrom(iso: string): string {
@@ -53,7 +69,24 @@ function toComplaint(report: ApiReport): Complaint {
     aiExplanation: report.aiExplanation,
     similarComplaintId: report.similarComplaintId,
     confirmedAction: report.confirmedAction,
+    groupId: report.groupId,
+    assignedTo: report.assignedTo ?? null,
+    assignedAt: report.assignedAt ?? null,
     fakeCheck: report.fakeCheck,
+  };
+}
+
+function toCandidate(candidate: ApiCandidate): DuplicateCandidate {
+  return {
+    id: candidate.publicId,
+    locationName: candidate.locationName,
+    issueType: candidate.issueType as IssueType,
+    status: candidate.status as ComplaintStatus,
+    groupId: candidate.groupId,
+    createdAt: candidate.createdAt,
+    proximityMeters: candidate.proximityMeters,
+    imageSimilarityPercent: candidate.imageSimilarityPercent,
+    sameIssueType: candidate.sameIssueType,
   };
 }
 
@@ -121,6 +154,49 @@ export async function updateReportAction(
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(action),
+  });
+  const body = await parseJsonOrThrow(res);
+  return toComplaint(body.report as ApiReport);
+}
+
+// --- Authority verification: grouping duplicates + dispatching maintenance ---
+
+// Nearby reports an authority reviewer can consider grouping this report
+// with — ranked by photo similarity then distance, same as the AI's own
+// auto-classification but surfaced as a full list for a human to choose from.
+export async function fetchGroupCandidates(id: string): Promise<DuplicateCandidate[]> {
+  const res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(id)}/candidates`);
+  const body = await parseJsonOrThrow(res);
+  return (body.candidates as ApiCandidate[]).map(toCandidate);
+}
+
+// Every report already consolidated under the same duplicate group as `id`
+// (the group's root report included).
+export async function fetchGroupMembers(id: string): Promise<Complaint[]> {
+  const res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(id)}/group`);
+  if (res.status === 404) return [];
+  const body = await parseJsonOrThrow(res);
+  return (body.members as ApiReport[]).map(toComplaint);
+}
+
+// Flags `id` as a duplicate of `groupWith`, consolidating it into that
+// report's group. Pass `groupWith: null` to split a report back out on its own.
+export async function setReportGroup(id: string, groupWith: string | null): Promise<Complaint> {
+  const res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(id)}/group`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ groupWith }),
+  });
+  const body = await parseJsonOrThrow(res);
+  return toComplaint(body.report as ApiReport);
+}
+
+// Dispatches `id` to a maintenance worker/crew. Pass `assignedTo: null` to clear it.
+export async function assignReport(id: string, assignedTo: string | null): Promise<Complaint> {
+  const res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(id)}/assign`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ assignedTo }),
   });
   const body = await parseJsonOrThrow(res);
   return toComplaint(body.report as ApiReport);

@@ -35,6 +35,18 @@ CREATE TABLE IF NOT EXISTS reports (
   fake_check_verdict        TEXT,
   fake_check_confidence     INTEGER,
   fake_check_reason         TEXT,
+  -- Manual verification by an authority reviewer, layered on top of the
+  -- automatic AI classification above. `group_id` points at the public_id
+  -- of the "root" report a cluster of duplicates has been consolidated
+  -- under (the root's own group_id is set to its own public_id once it has
+  -- at least one duplicate grouped under it, so "WHERE COALESCE(group_id,
+  -- public_id) = <root>" finds every member of a group in one query).
+  group_id                  TEXT,
+  -- Free-text name/identifier of the maintenance staff or crew this report
+  -- has been dispatched to. Kept as plain text rather than a foreign key to
+  -- a staff table since CivicLens has no staff-account system yet.
+  assigned_to               TEXT,
+  assigned_at               TIMESTAMPTZ,
   created_at                TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -44,6 +56,11 @@ ALTER TABLE reports ADD COLUMN IF NOT EXISTS photo_hash TEXT;
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS fake_check_verdict TEXT;
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS fake_check_confidence INTEGER;
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS fake_check_reason TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS group_id TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ;
 
 -- Admin dashboard lists newest-first.
 CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports (created_at DESC);
+-- Fetching every member of a duplicate group by its root's public_id.
+CREATE INDEX IF NOT EXISTS idx_reports_group_id ON reports (group_id);

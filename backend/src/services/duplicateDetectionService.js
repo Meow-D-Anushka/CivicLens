@@ -79,6 +79,59 @@ export async function findNearbyMatches({ photoHash, lat, lng, issueType, exclud
 }
 
 /**
+ * Returns every other report within the proximity radius of the given
+ * report's coordinates, each annotated with distance and photo similarity —
+ * for the authority dashboard's "flag as duplicate / group with" picker,
+ * where a human (not just the auto-classifier) decides which nearby reports
+ * really belong together. Widest-net version of findNearbyMatches: instead
+ * of collapsing to a single best match, it returns the whole ranked list so
+ * a reviewer can eyeball and choose.
+ */
+export async function findNearbyReports({ lat, lng, photoHash, issueType, excludePublicId }) {
+  if (lat == null || lng == null) return [];
+
+  const result = await pool.query(
+    `SELECT public_id, location_name, issue_type, status, lat, lng, photo_hash,
+            group_id, created_at
+     FROM reports
+     WHERE lat IS NOT NULL AND lng IS NOT NULL AND public_id IS NOT NULL
+       AND public_id != COALESCE($1, '')`,
+    [excludePublicId || null]
+  );
+
+  const candidates = [];
+
+  for (const row of result.rows) {
+    const distanceMeters = haversineMeters(lat, lng, Number(row.lat), Number(row.lng));
+    if (distanceMeters > PROXIMITY_RADIUS_METERS) continue;
+
+    const imageSimilarityPercent =
+      photoHash && row.photo_hash
+        ? similarityPercent(hammingDistance(photoHash, row.photo_hash))
+        : 0;
+
+    candidates.push({
+      publicId: row.public_id,
+      locationName: row.location_name,
+      issueType: row.issue_type,
+      status: row.status,
+      groupId: row.group_id || undefined,
+      createdAt: row.created_at,
+      proximityMeters: Math.round(distanceMeters),
+      imageSimilarityPercent,
+      sameIssueType: row.issue_type === issueType,
+    });
+  }
+
+  // Best visual match first, then closest.
+  candidates.sort(
+    (a, b) => b.imageSimilarityPercent - a.imageSimilarityPercent || a.proximityMeters - b.proximityMeters
+  );
+
+  return candidates;
+}
+
+/**
  * Turns the raw match data into the fields the rest of the app displays:
  * an aiResult label, the three "triangulation factor" numbers, and a plain-
  * language explanation.
